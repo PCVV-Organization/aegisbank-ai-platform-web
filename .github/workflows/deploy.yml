@@ -4,6 +4,15 @@ on:
   push:
     branches: [master]
   workflow_dispatch:
+    inputs:
+      mode:
+        description: Build mode for the hosted portal
+        required: true
+        default: synthetic
+        type: choice
+        options:
+          - synthetic
+          - external-id
 
 permissions:
   contents: read
@@ -23,11 +32,26 @@ jobs:
           cache: pnpm
           cache-dependency-path: pnpm-lock.yaml
       - run: pnpm install --frozen-lockfile
-      - name: Build synthetic demo application
+      - name: Validate External ID deployment inputs
+        if: ${{ inputs.mode == 'external-id' }}
         env:
-          VITE_API_BASE_URL: ""
-          VITE_USE_MOCK_API: "true"
-          VITE_USE_MOCK_AUTH: "true"
+          VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
+          VITE_ENTRA_CLIENT_ID: ${{ vars.VITE_ENTRA_CLIENT_ID }}
+          VITE_ENTRA_AUTHORITY: ${{ vars.VITE_ENTRA_AUTHORITY }}
+          VITE_AEGISBANK_API_SCOPE: ${{ vars.VITE_AEGISBANK_API_SCOPE }}
+        run: |
+          test -n "$VITE_API_BASE_URL"
+          test -n "$VITE_ENTRA_CLIENT_ID"
+          test -n "$VITE_ENTRA_AUTHORITY"
+          test -n "$VITE_AEGISBANK_API_SCOPE"
+      - name: Build hosted application
+        env:
+          VITE_API_BASE_URL: ${{ inputs.mode == 'external-id' && vars.VITE_API_BASE_URL || '' }}
+          VITE_USE_MOCK_API: ${{ inputs.mode == 'external-id' && 'false' || 'true' }}
+          VITE_USE_MOCK_AUTH: ${{ inputs.mode == 'external-id' && 'false' || 'true' }}
+          VITE_ENTRA_CLIENT_ID: ${{ inputs.mode == 'external-id' && vars.VITE_ENTRA_CLIENT_ID || '' }}
+          VITE_ENTRA_AUTHORITY: ${{ inputs.mode == 'external-id' && vars.VITE_ENTRA_AUTHORITY || '' }}
+          VITE_AEGISBANK_API_SCOPE: ${{ inputs.mode == 'external-id' && vars.VITE_AEGISBANK_API_SCOPE || '' }}
         run: pnpm build
       - name: Include Static Web Apps routes
         run: cp staticwebapp.config.json dist/staticwebapp.config.json
