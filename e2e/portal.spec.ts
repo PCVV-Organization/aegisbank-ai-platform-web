@@ -7,6 +7,9 @@ test("synthetic customer can open the assistant", async ({ page }) => {
   await expect(
     page.getByRole("heading", { name: "Aegis assistant" }),
   ).toBeVisible();
+  await page.getByLabel("Message").fill("What is my synthetic balance?");
+  await page.getByRole("button", { name: "Send" }).click();
+  await expect(page.getByText("Synthetic response.")).toBeVisible();
 });
 
 test("portal has no serious accessibility violations @a11y", async ({

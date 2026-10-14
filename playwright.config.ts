@@ -8,6 +8,10 @@ export default defineConfig({
     command: "pnpm dev --host 127.0.0.1",
     url: "http://127.0.0.1:5173",
     reuseExistingServer: true,
+    env: {
+      VITE_USE_MOCK_API: "true",
+      VITE_USE_MOCK_AUTH: "true",
+    },
   },
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
 });
