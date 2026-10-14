@@ -7,28 +7,35 @@ import {
   Navigate,
   redirect,
 } from "@tanstack/react-router";
+import { useState } from "react";
 import { useAuth } from "../auth/use-auth";
 import { AssistantPage } from "../features/assistant/assistant-page";
 import { ServiceRequestForm } from "../features/service-requests/service-request-form";
 
 function AppShell() {
   const { user, signOut } = useAuth();
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
   return (
     <>
       <a className="skip-link" href="#main-content">
         Skip to content
       </a>
       <div className="min-h-screen bg-slate-50 md:flex">
-        <aside className="bg-[#0f2747] p-4 text-white md:min-h-screen md:w-64 md:shrink-0 md:p-5">
+        <aside
+          className={`${mobileNavOpen ? "block" : "hidden"} ${collapsed ? "md:w-20" : "md:w-64"} bg-[#0f2747] p-4 text-white md:block md:min-h-screen md:shrink-0 md:p-5`}
+        >
           <div className="mb-6 flex items-center justify-between md:mb-10">
-            <div>
-              <div className="text-xs font-semibold uppercase tracking-[0.2em] text-blue-200">
-                Digital banking
+            {!collapsed && (
+              <div>
+                <div className="text-xs font-semibold uppercase tracking-[0.2em] text-blue-200">
+                  Digital banking
+                </div>
+                <div className="mt-1 text-xl font-semibold tracking-tight">
+                  AegisBank
+                </div>
               </div>
-              <div className="mt-1 text-xl font-semibold tracking-tight">
-                AegisBank
-              </div>
-            </div>
+            )}
             <span className="rounded-full bg-emerald-400/15 px-2 py-1 text-xs font-medium text-emerald-200">
               Online
             </span>
@@ -52,14 +59,32 @@ function AppShell() {
                 activeProps={{ className: "bg-white/15 text-white" }}
                 className="rounded-lg px-3 py-2.5 text-sm text-slate-300 transition hover:bg-white/10 hover:text-white focus-visible:ring-2 focus-visible:ring-blue-300"
               >
-                {item.replace("-", " ").replace(/^./, (c) => c.toUpperCase())}
+                <span aria-hidden="true" className="mr-2">
+                  {
+                    ["◈", "▣", "▤", "◇", "↗", "✦", "✧"][
+                      [
+                        "overview",
+                        "accounts",
+                        "cards",
+                        "loans",
+                        "payments",
+                        "service-requests",
+                        "assistant",
+                      ].indexOf(item)
+                    ]
+                  }
+                </span>
+                {!collapsed &&
+                  item.replace("-", " ").replace(/^./, (c) => c.toUpperCase())}
               </Link>
             ))}
           </nav>
           <div className="mt-6 border-t border-white/20 pt-4 text-sm md:mt-10">
-            <p className="mb-3 truncate text-slate-300">
-              {user?.name ?? "Synthetic customer"}
-            </p>
+            {!collapsed && (
+              <p className="mb-3 truncate text-slate-300">
+                {user?.name ?? "Synthetic customer"}
+              </p>
+            )}
             <button
               className="min-h-11 rounded-lg border border-white/30 px-3 py-2 text-slate-200 transition hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-blue-300"
               onClick={signOut}
@@ -68,8 +93,33 @@ function AppShell() {
             </button>
           </div>
         </aside>
-        <main id="main-content" className="min-w-0 flex-1 p-4 md:p-8 lg:p-10">
-          <Outlet />
+        <main id="main-content" className="min-w-0 flex-1">
+          <header className="sticky top-0 z-10 flex min-h-16 items-center justify-between border-b border-slate-200 bg-white/95 px-4 shadow-sm backdrop-blur md:px-8">
+            <button
+              type="button"
+              aria-label="Toggle navigation"
+              aria-expanded={mobileNavOpen}
+              className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg border border-slate-200 text-lg text-slate-700 transition hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-blue-600 md:hidden"
+              onClick={() => setMobileNavOpen((open) => !open)}
+            >
+              ☰
+            </button>
+            <span className="text-sm font-medium text-slate-600">
+              {user?.name ?? "Guest"}
+            </span>
+            <button
+              type="button"
+              aria-label="Collapse navigation"
+              aria-expanded={!collapsed}
+              className="hidden min-h-11 rounded-lg border border-slate-200 px-3 text-sm text-slate-700 transition hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-blue-600 md:inline-flex"
+              onClick={() => setCollapsed((value) => !value)}
+            >
+              {collapsed ? "Expand" : "Collapse"}
+            </button>
+          </header>
+          <div className="p-4 md:p-8 lg:p-10">
+            <Outlet />
+          </div>
         </main>
       </div>
     </>
