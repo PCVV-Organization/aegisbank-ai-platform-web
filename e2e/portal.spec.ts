@@ -9,7 +9,9 @@ test("synthetic customer can open the assistant", async ({ page }) => {
   ).toBeVisible();
   await page.getByLabel("Message").fill("What is my synthetic balance?");
   await page.getByRole("button", { name: "Send" }).click();
-  await expect(page.getByText("Synthetic response.")).toBeVisible();
+  await expect(
+    page.getByText("Your available synthetic balance is $12,480.00."),
+  ).toBeVisible();
 });
 
 test("portal has no serious accessibility violations @a11y", async ({
