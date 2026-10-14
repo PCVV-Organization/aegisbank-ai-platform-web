@@ -18,10 +18,25 @@ function AppShell() {
       <a className="skip-link" href="#main-content">
         Skip to content
       </a>
-      <div className="min-h-screen md:flex">
-        <aside className="border-slate-200 bg-[#0f2747] p-4 text-white md:w-64">
-          <div className="mb-8 text-xl font-semibold">AegisBank</div>
-          <nav aria-label="Primary navigation" className="grid gap-1">
+      <div className="min-h-screen bg-slate-50 md:flex">
+        <aside className="bg-[#0f2747] p-4 text-white md:min-h-screen md:w-64 md:shrink-0 md:p-5">
+          <div className="mb-6 flex items-center justify-between md:mb-10">
+            <div>
+              <div className="text-xs font-semibold uppercase tracking-[0.2em] text-blue-200">
+                Digital banking
+              </div>
+              <div className="mt-1 text-xl font-semibold tracking-tight">
+                AegisBank
+              </div>
+            </div>
+            <span className="rounded-full bg-emerald-400/15 px-2 py-1 text-xs font-medium text-emerald-200">
+              Online
+            </span>
+          </div>
+          <nav
+            aria-label="Primary navigation"
+            className="grid grid-cols-2 gap-2 md:grid-cols-1"
+          >
             {[
               "overview",
               "accounts",
@@ -34,25 +49,26 @@ function AppShell() {
               <Link
                 key={item}
                 to={`/app/${item}` as never}
-                className="rounded px-3 py-2 text-sm hover:bg-white/10 [&.active]:bg-white/15"
+                activeProps={{ className: "bg-white/15 text-white" }}
+                className="rounded-lg px-3 py-2.5 text-sm text-slate-300 transition hover:bg-white/10 hover:text-white focus-visible:ring-2 focus-visible:ring-blue-300"
               >
                 {item.replace("-", " ").replace(/^./, (c) => c.toUpperCase())}
               </Link>
             ))}
           </nav>
-          <div className="mt-8 border-t border-white/20 pt-4 text-sm">
-            <p className="mb-2 text-slate-300">
+          <div className="mt-6 border-t border-white/20 pt-4 text-sm md:mt-10">
+            <p className="mb-3 truncate text-slate-300">
               {user?.name ?? "Synthetic customer"}
             </p>
             <button
-              className="rounded border border-white/40 px-3 py-2"
+              className="min-h-11 rounded-lg border border-white/30 px-3 py-2 text-slate-200 transition hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-blue-300"
               onClick={signOut}
             >
               Sign out
             </button>
           </div>
         </aside>
-        <main id="main-content" className="min-w-0 flex-1 p-4 md:p-8">
+        <main id="main-content" className="min-w-0 flex-1 p-4 md:p-8 lg:p-10">
           <Outlet />
         </main>
       </div>
@@ -63,14 +79,19 @@ function AppShell() {
 function LoginPage() {
   const { signIn } = useAuth();
   return (
-    <main className="grid min-h-screen place-items-center p-6">
-      <section className="w-full max-w-md rounded-xl bg-white p-8 shadow-sm">
-        <h1 className="mb-2 text-2xl font-semibold">Welcome to AegisBank</h1>
-        <p className="mb-6 text-slate-600">
+    <main className="grid min-h-screen place-items-center bg-slate-50 p-6">
+      <section className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-8 shadow-xl shadow-slate-200/60">
+        <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-blue-700">
+          AegisBank
+        </p>
+        <h1 className="mb-2 text-3xl font-semibold tracking-tight text-slate-950">
+          Welcome back
+        </h1>
+        <p className="mb-7 text-slate-600">
           Synthetic banking laboratory portal.
         </p>
         <button
-          className="w-full rounded-lg bg-[#0f2747] px-4 py-3 font-medium text-white"
+          className="min-h-12 w-full rounded-lg bg-[#0f2747] px-4 py-3 font-medium text-white transition hover:bg-[#173b6c] focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
           onClick={signIn}
         >
           Sign in
@@ -88,12 +109,21 @@ function Page({
   children?: React.ReactNode;
 }) {
   return (
-    <section>
-      <h1 className="mb-2 text-3xl font-semibold text-[#0f2747]">{title}</h1>
+    <section className="mx-auto max-w-6xl">
+      <p className="mb-2 text-sm font-medium text-blue-700">
+        Your banking workspace
+      </p>
+      <h1 className="text-3xl font-semibold tracking-tight text-slate-950">
+        {title}
+      </h1>
       {children ?? (
-        <p className="text-slate-600">
-          This module is ready for its next domain slice.
-        </p>
+        <div className="mt-6 rounded-2xl border border-dashed border-slate-300 bg-white p-8">
+          <p className="font-medium text-slate-900">Coming next</p>
+          <p className="mt-2 max-w-xl text-slate-600">
+            This module is being prepared for the next product slice. Your
+            synthetic data stays local until the backend contract is connected.
+          </p>
+        </div>
       )}
     </section>
   );
@@ -125,19 +155,19 @@ const overviewRoute = createRoute({
   path: "/overview",
   component: () => (
     <Page title="Overview">
-      <div className="mt-6 grid gap-4 md:grid-cols-3">
-        <article className="rounded-xl bg-white p-5 shadow-sm">
+      <div className="mt-8 grid gap-4 md:grid-cols-3">
+        <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
           <p className="text-sm text-slate-500">Available balance</p>
           <p className="mt-2 text-2xl font-semibold">$12,480.00</p>
         </article>
-        <article className="rounded-xl bg-white p-5 shadow-sm">
+        <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
           <p className="text-sm text-slate-500">Open requests</p>
           <p className="mt-2 text-2xl font-semibold">2</p>
         </article>
-        <article className="rounded-xl bg-white p-5 shadow-sm">
+        <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
           <p className="text-sm text-slate-500">Assistant</p>
           <Link
-            className="mt-2 inline-block text-blue-700 underline"
+            className="mt-3 inline-block font-medium text-blue-700 underline decoration-blue-300 underline-offset-4 hover:text-blue-900 focus-visible:ring-2 focus-visible:ring-blue-500"
             to="/app/assistant"
           >
             Ask Aegis
