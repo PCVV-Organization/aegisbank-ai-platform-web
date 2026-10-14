@@ -3,6 +3,7 @@ import ReactDOM from "react-dom/client";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { RouterProvider } from "@tanstack/react-router";
 import { router } from "./app/router";
+import { initializeAuth } from "./auth/use-auth";
 import "./styles.css";
 
 const queryClient = new QueryClient({
@@ -10,8 +11,11 @@ const queryClient = new QueryClient({
 });
 
 async function bootstrap() {
-  const { worker } = await import("./test/browser");
-  await worker.start({ onUnhandledRequest: "bypass" });
+  await initializeAuth();
+  if (import.meta.env.VITE_USE_MOCK_API !== "false") {
+    const { worker } = await import("./test/browser");
+    await worker.start({ onUnhandledRequest: "bypass" });
+  }
   ReactDOM.createRoot(document.getElementById("root")!).render(
     <React.StrictMode>
       <QueryClientProvider client={queryClient}>
