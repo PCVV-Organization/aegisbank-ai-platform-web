@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title">
+  <title>AegisBank</title>
+  <rect width="64" height="64" rx="16" fill="#0f2747"/>
+  <path d="M32 10 50 18v13c0 12-7.7 19.4-18 23-10.3-3.6-18-11-18-23V18l18-8Z" fill="#2d7ff9"/>
+  <path d="m32 18 10 4.5v8c0 6.8-3.7 11.3-10 14-6.3-2.7-10-7.2-10-14v-8L32 18Z" fill="#fff"/>
+</svg>
