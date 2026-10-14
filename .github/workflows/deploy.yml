@@ -23,10 +23,14 @@ jobs:
           cache: pnpm
           cache-dependency-path: pnpm-lock.yaml
       - run: pnpm install --frozen-lockfile
-      - name: Build synthetic MVP
+      - name: Build staging application
         env:
-          VITE_USE_MOCK_API: "true"
-          VITE_USE_MOCK_AUTH: "true"
+          VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
+          VITE_ENTRA_CLIENT_ID: ${{ vars.VITE_ENTRA_CLIENT_ID }}
+          VITE_ENTRA_TENANT_ID: ${{ vars.VITE_ENTRA_TENANT_ID }}
+          VITE_AEGISBANK_API_CLIENT_ID: ${{ vars.VITE_AEGISBANK_API_CLIENT_ID }}
+          VITE_USE_MOCK_API: ${{ vars.VITE_USE_MOCK_API }}
+          VITE_USE_MOCK_AUTH: ${{ vars.VITE_USE_MOCK_AUTH }}
         run: pnpm build
       - name: Include Static Web Apps routes
         run: cp staticwebapp.config.json dist/staticwebapp.config.json
