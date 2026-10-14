@@ -28,6 +28,8 @@ jobs:
           VITE_USE_MOCK_API: "true"
           VITE_USE_MOCK_AUTH: "true"
         run: pnpm build
+      - name: Include Static Web Apps routes
+        run: cp staticwebapp.config.json dist/staticwebapp.config.json
       - uses: Azure/static-web-apps-deploy@v1
         with:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
