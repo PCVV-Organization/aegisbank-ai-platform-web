@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { RouterProvider } from "@tanstack/react-router";
 import { router } from "./app/router";
 import { initializeEntra } from "./auth/entra";
+import { refreshAuthState } from "./auth/use-auth";
 import "./styles.css";
 
 const queryClient = new QueryClient({
@@ -12,6 +13,7 @@ const queryClient = new QueryClient({
 
 async function bootstrap() {
   await initializeEntra();
+  refreshAuthState();
   if (import.meta.env.VITE_USE_MOCK_API === "true") {
     const { worker } = await import("./test/browser");
     await worker.start({ onUnhandledRequest: "bypass" });
