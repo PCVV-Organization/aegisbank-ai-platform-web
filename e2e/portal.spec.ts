@@ -15,6 +15,19 @@ test("synthetic customer can open the assistant", async ({ page }) => {
   ).toBeVisible();
 });
 
+test("synthetic customer can ask for loan count in Spanish", async ({
+  page,
+}) => {
+  await page.goto("/app/overview");
+  await page.getByRole("button", { name: "Start synthetic demo" }).click();
+  await page.getByRole("link", { name: "Assistant" }).click();
+  await page.getByLabel("Message").fill("cuantos prestamos tengo");
+  await page.getByRole("button", { name: "Send" }).click();
+  await expect(
+    page.getByText("Tienes 2 préstamos sintéticos activos."),
+  ).toBeVisible();
+});
+
 test("portal has no serious accessibility violations @a11y", async ({
   page,
 }) => {

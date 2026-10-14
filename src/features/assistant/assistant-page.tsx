@@ -13,8 +13,8 @@ export function AssistantPage() {
         Aegis assistant
       </h1>
       <p className="mt-3 max-w-2xl text-slate-600">
-        Ask about your synthetic banking information. State-changing actions
-        always require approval.
+        Ask about your synthetic banking information in English or Spanish.
+        State-changing actions always require approval.
       </p>
       <div
         className="mt-8 min-h-64 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
@@ -26,7 +26,7 @@ export function AssistantPage() {
           <div>
             <p className="font-medium text-slate-900">How can I help?</p>
             <p className="mt-2 text-slate-500">
-              Try asking about your balance or open service requests.
+              Try asking about your balance, loans, or open service requests.
             </p>
           </div>
         )}
@@ -49,7 +49,7 @@ export function AssistantPage() {
           className="min-h-12 min-w-0 flex-1 rounded-lg border border-slate-300 bg-white px-3 py-3 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
           value={message}
           onChange={(event) => setMessage(event.target.value)}
-          placeholder="Ask a question"
+          placeholder="Ask in English or Spanish"
         />
         <button
           className="min-h-12 rounded-lg bg-[#0f2747] px-5 py-3 font-medium text-white transition hover:bg-[#173b6c] focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
