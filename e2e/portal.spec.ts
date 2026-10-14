@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 
 test("synthetic customer can open the assistant", async ({ page }) => {
   await page.goto("/app/overview");
+  await page.getByRole("button", { name: "Start synthetic demo" }).click();
   await expect(page.getByRole("heading", { name: "Overview" })).toBeVisible();
   await page.getByRole("link", { name: "Assistant" }).click();
   await expect(
@@ -18,6 +19,7 @@ test("portal has no serious accessibility violations @a11y", async ({
   page,
 }) => {
   await page.goto("/app/overview");
+  await page.getByRole("button", { name: "Start synthetic demo" }).click();
   const { AxeBuilder } = await import("@axe-core/playwright");
   const results = await new AxeBuilder({ page }).analyze();
   expect(
