@@ -140,17 +140,22 @@ function LoginPage() {
           Welcome back
         </h1>
         <p className="mb-7 text-slate-600">
-          Synthetic banking laboratory demo. No real customer data or accounts
-          are used.
+          {import.meta.env.VITE_USE_MOCK_AUTH !== "false"
+            ? "Synthetic banking laboratory demo. No real customer data or accounts are used."
+            : "Sign in securely with your AegisBank customer account."}
         </p>
         <button
           className="min-h-12 w-full rounded-lg bg-[#0f2747] px-4 py-3 font-medium text-white transition hover:bg-[#173b6c] focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
           onClick={() => {
             signIn();
-            void navigate({ to: "/app/overview" });
+            if (import.meta.env.VITE_USE_MOCK_AUTH !== "false") {
+              void navigate({ to: "/app/overview" });
+            }
           }}
         >
-          Start synthetic demo
+          {import.meta.env.VITE_USE_MOCK_AUTH !== "false"
+            ? "Start synthetic demo"
+            : "Sign in"}
         </button>
       </section>
     </main>
