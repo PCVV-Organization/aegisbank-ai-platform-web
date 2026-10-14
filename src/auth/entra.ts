@@ -37,18 +37,16 @@ export async function initializeEntra(): Promise<void> {
 export function getActiveAccount(): AccountInfo | null {
   return msalInstance?.getActiveAccount() ?? null;
 }
-export async function signInWithEntra(): Promise<AccountInfo> {
+export async function signInWithEntra(): Promise<void> {
   if (!msalInstance || !apiScopes.length)
     throw new Error(
       "Entra authentication is not configured for this deployment.",
     );
-  const result = await msalInstance.loginPopup({ scopes: apiScopes });
-  msalInstance.setActiveAccount(result.account);
-  return result.account;
+  await msalInstance.loginRedirect({ scopes: apiScopes });
 }
 export async function signOutWithEntra(): Promise<void> {
   const account = getActiveAccount();
-  if (msalInstance && account) await msalInstance.logoutPopup({ account });
+  if (msalInstance && account) await msalInstance.logoutRedirect({ account });
 }
 export async function getAccessToken(): Promise<string | null> {
   if (!msalInstance || !apiScopes.length) return null;
@@ -58,6 +56,7 @@ export async function getAccessToken(): Promise<string | null> {
   try {
     return (await msalInstance.acquireTokenSilent(request)).accessToken;
   } catch {
-    return (await msalInstance.acquireTokenPopup(request)).accessToken;
+    await msalInstance.acquireTokenRedirect(request);
+    return null;
   }
 }

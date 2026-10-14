@@ -26,18 +26,22 @@ let state: AuthState = {
   signOut: () => undefined,
 };
 const listeners = new Set<() => void>();
+export const refreshAuthState = () => {
+  state = {
+    ...state,
+    user: isMockAuth
+      ? { id: "CUST-0001", name: "Synthetic customer" }
+      : accountUser(),
+  };
+  listeners.forEach((listener) => listener());
+};
 state.signIn = () => {
   if (isMockAuth) {
     state = { ...state, user: { id: "CUST-0001", name: "Synthetic customer" } };
     listeners.forEach((listener) => listener());
     return;
   }
-  void signInWithEntra()
-    .then(() => {
-      state = { ...state, user: accountUser() };
-      listeners.forEach((listener) => listener());
-    })
-    .catch(() => undefined);
+  void signInWithEntra().catch(() => undefined);
 };
 state.signOut = () => {
   if (!isMockAuth) void signOutWithEntra();
