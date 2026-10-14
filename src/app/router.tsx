@@ -6,6 +6,7 @@ import {
   Link,
   Navigate,
   redirect,
+  useNavigate,
 } from "@tanstack/react-router";
 import { useState } from "react";
 import { useAuth } from "../auth/use-auth";
@@ -128,6 +129,7 @@ function AppShell() {
 
 function LoginPage() {
   const { signIn } = useAuth();
+  const navigate = useNavigate();
   return (
     <main className="grid min-h-screen place-items-center bg-slate-50 p-6">
       <section className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-8 shadow-xl shadow-slate-200/60">
@@ -138,13 +140,17 @@ function LoginPage() {
           Welcome back
         </h1>
         <p className="mb-7 text-slate-600">
-          Synthetic banking laboratory portal.
+          Synthetic banking laboratory demo. No real customer data or accounts
+          are used.
         </p>
         <button
           className="min-h-12 w-full rounded-lg bg-[#0f2747] px-4 py-3 font-medium text-white transition hover:bg-[#173b6c] focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
-          onClick={signIn}
+          onClick={() => {
+            signIn();
+            void navigate({ to: "/app/overview" });
+          }}
         >
-          Sign in
+          Start synthetic demo
         </button>
       </section>
     </main>
