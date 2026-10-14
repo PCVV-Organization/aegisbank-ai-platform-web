@@ -15,7 +15,7 @@ export function ServiceRequestForm() {
   });
   return (
     <form
-      className="mt-6 max-w-xl rounded-xl bg-white p-5 shadow-sm"
+      className="mt-8 max-w-xl rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
       onSubmit={(event) => {
         event.preventDefault();
         event.stopPropagation();
@@ -30,7 +30,7 @@ export function ServiceRequestForm() {
             </label>
             <textarea
               id={field.name}
-              className="min-h-28 w-full rounded-lg border border-slate-300 p-3"
+              className="min-h-32 w-full rounded-lg border border-slate-300 p-3 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
               value={field.state.value}
               onBlur={field.handleBlur}
               onChange={(event) => field.handleChange(event.target.value)}
@@ -53,7 +53,7 @@ export function ServiceRequestForm() {
       >
         {([canSubmit, isSubmitting]) => (
           <button
-            className="mt-4 rounded-lg bg-[#0f2747] px-4 py-3 text-white disabled:opacity-50"
+            className="mt-5 min-h-12 rounded-lg bg-[#0f2747] px-5 py-3 font-medium text-white transition hover:bg-[#173b6c] focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
             type="submit"
             disabled={!canSubmit}
           >
