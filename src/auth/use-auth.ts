@@ -2,7 +2,14 @@ import { PublicClientApplication, type AccountInfo } from "@azure/msal-browser";
 import { useSyncExternalStore } from "react";
 
 type User = { id: string; name: string };
-type AuthState = { user: User | null; signIn: () => void; signOut: () => void };
+type AuthState = {
+  user: User | null;
+  signIn: (dni?: string, password?: string) => Promise<void>;
+  signOut: () => Promise<void>;
+};
+const authMode =
+  import.meta.env.VITE_AUTH_MODE ??
+  (import.meta.env.VITE_USE_MOCK_AUTH !== "false" ? "mock" : "entra-jwt");
 const useMockAuth = import.meta.env.VITE_USE_MOCK_AUTH !== "false";
 const clientId = import.meta.env.VITE_ENTRA_CLIENT_ID ?? "";
 const authority = import.meta.env.VITE_ENTRA_AUTHORITY ?? "";
@@ -22,9 +29,11 @@ const msal =
 let activeAccount: AccountInfo | null = null;
 let state: AuthState = {
   user: null,
-  signIn: () => undefined,
-  signOut: () => undefined,
+  signIn: async () => undefined,
+  signOut: async () => undefined,
 };
+let syntheticToken: string | null = null;
+const apiBase = import.meta.env.VITE_API_BASE_URL ?? "";
 const listeners = new Set<() => void>();
 const notify = () => listeners.forEach((listener) => listener());
 function setAccount(account: AccountInfo | null) {
@@ -37,26 +46,60 @@ function setAccount(account: AccountInfo | null) {
   };
   notify();
 }
-state.signIn = () => {
-  if (useMockAuth) {
+state.signIn = async (dni?: string, password?: string) => {
+  if (authMode === "synthetic-password") {
+    if (!dni || !password) throw new Error("DNI y contraseña son obligatorios");
+    const response = await fetch(`${apiBase}/api/v1/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ dni, password }),
+    });
+    if (!response.ok) throw new Error("DNI o contraseña no válidos");
+    const result = (await response.json()) as {
+      access_token: string;
+      customer_id: string;
+    };
+    syntheticToken = result.access_token;
+    state = {
+      ...state,
+      user: { id: result.customer_id, name: `Customer ${result.customer_id}` },
+    };
+    notify();
+    return;
+  }
+  if (useMockAuth || authMode === "mock") {
     state = { ...state, user: { id: "CUST-0001", name: "Synthetic customer" } };
     notify();
     return;
   }
   if (!msal || !apiScope)
     throw new Error("External ID authentication is not configured");
-  void msal.loginRedirect({ scopes: ["openid", "profile", apiScope] });
+  await msal.loginRedirect({ scopes: ["openid", "profile", apiScope] });
 };
-state.signOut = () => {
+state.signOut = async () => {
+  if (authMode === "synthetic-password" && syntheticToken) {
+    await fetch(`${apiBase}/api/v1/auth/logout`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${syntheticToken}` },
+    });
+    syntheticToken = null;
+    state = { ...state, user: null };
+    notify();
+    return;
+  }
   if (useMockAuth || !msal) {
     setAccount(null);
     return;
   }
-  void msal.logoutRedirect();
+  await msal.logoutRedirect();
 };
-export const authConfigured = useMockAuth || Boolean(msal && apiScope);
+export const authConfigured =
+  authMode === "synthetic-password"
+    ? Boolean(apiBase)
+    : useMockAuth || Boolean(msal && apiScope);
 export const getCustomerId = () => state.user?.id ?? "CUST-0001";
 export const getAccessToken = async (): Promise<string | null> => {
+  if (authMode === "synthetic-password") return syntheticToken;
   if (useMockAuth || !msal || !activeAccount || !apiScope) return null;
   const response = await msal.acquireTokenSilent({
     account: activeAccount,
