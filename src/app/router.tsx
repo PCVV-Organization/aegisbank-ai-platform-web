@@ -130,6 +130,11 @@ function AppShell() {
 function LoginPage() {
   const { signIn } = useAuth();
   const navigate = useNavigate();
+  const [dni, setDni] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const customerAuth = import.meta.env.VITE_AUTH_MODE === "synthetic-password";
   return (
     <main className="grid min-h-screen place-items-center bg-slate-50 p-6">
       <section className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-8 shadow-xl shadow-slate-200/60">
@@ -144,18 +149,69 @@ function LoginPage() {
             ? "Synthetic banking laboratory demo. No real customer data or accounts are used."
             : "Sign in securely with your AegisBank customer account."}
         </p>
+        {customerAuth && (
+          <div className="mb-5 grid gap-3">
+            <label className="grid gap-1 text-sm font-medium text-slate-700">
+              DNI
+              <input
+                value={dni}
+                onChange={(event) =>
+                  setDni(event.target.value.replace(/\D/g, "").slice(0, 8))
+                }
+                inputMode="numeric"
+                autoComplete="username"
+                maxLength={8}
+                className="min-h-11 rounded-lg border border-slate-300 px-3"
+                placeholder="12345678"
+              />
+            </label>
+            <label className="grid gap-1 text-sm font-medium text-slate-700">
+              Contraseña
+              <input
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                type="password"
+                autoComplete="current-password"
+                className="min-h-11 rounded-lg border border-slate-300 px-3"
+              />
+            </label>
+            {error && (
+              <p role="alert" className="text-sm text-red-700">
+                {error}
+              </p>
+            )}
+          </div>
+        )}
         <button
           className="min-h-12 w-full rounded-lg bg-[#0f2747] px-4 py-3 font-medium text-white transition hover:bg-[#173b6c] focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
-          onClick={() => {
-            signIn();
-            if (import.meta.env.VITE_USE_MOCK_AUTH !== "false") {
-              void navigate({ to: "/app/overview" });
+          disabled={loading}
+          onClick={async () => {
+            setError(null);
+            setLoading(true);
+            try {
+              await signIn(
+                customerAuth ? dni : undefined,
+                customerAuth ? password : undefined,
+              );
+              await navigate({ to: "/app/overview" });
+            } catch (cause) {
+              setError(
+                cause instanceof Error
+                  ? cause.message
+                  : "No se pudo iniciar sesión",
+              );
+            } finally {
+              setLoading(false);
             }
           }}
         >
-          {import.meta.env.VITE_USE_MOCK_AUTH !== "false"
-            ? "Start synthetic demo"
-            : "Sign in"}
+          {customerAuth
+            ? loading
+              ? "Validando…"
+              : "Iniciar sesión"
+            : import.meta.env.VITE_USE_MOCK_AUTH !== "false"
+              ? "Start synthetic demo"
+              : "Sign in"}
         </button>
       </section>
     </main>

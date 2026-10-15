@@ -12,6 +12,7 @@ on:
         type: choice
         options:
           - synthetic
+          - synthetic-password
           - external-id
 
 permissions:
@@ -32,8 +33,8 @@ jobs:
           cache: pnpm
           cache-dependency-path: pnpm-lock.yaml
       - run: pnpm install --frozen-lockfile
-      - name: Validate External ID deployment inputs
-        if: ${{ inputs.mode == 'external-id' }}
+      - name: Validate hosted deployment inputs
+        if: ${{ inputs.mode == 'external-id' || inputs.mode == 'synthetic-password' }}
         env:
           VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
           VITE_ENTRA_CLIENT_ID: ${{ vars.VITE_ENTRA_CLIENT_ID }}
@@ -41,14 +42,17 @@ jobs:
           VITE_AEGISBANK_API_SCOPE: ${{ vars.VITE_AEGISBANK_API_SCOPE }}
         run: |
           test -n "$VITE_API_BASE_URL"
-          test -n "$VITE_ENTRA_CLIENT_ID"
-          test -n "$VITE_ENTRA_AUTHORITY"
-          test -n "$VITE_AEGISBANK_API_SCOPE"
+          if [ "${{ inputs.mode }}" = "external-id" ]; then
+            test -n "$VITE_ENTRA_CLIENT_ID"
+            test -n "$VITE_ENTRA_AUTHORITY"
+            test -n "$VITE_AEGISBANK_API_SCOPE"
+          fi
       - name: Build hosted application
         env:
-          VITE_API_BASE_URL: ${{ inputs.mode == 'external-id' && vars.VITE_API_BASE_URL || '' }}
-          VITE_USE_MOCK_API: ${{ inputs.mode == 'external-id' && 'false' || 'true' }}
-          VITE_USE_MOCK_AUTH: ${{ inputs.mode == 'external-id' && 'false' || 'true' }}
+          VITE_API_BASE_URL: ${{ inputs.mode != 'synthetic' && vars.VITE_API_BASE_URL || '' }}
+          VITE_AUTH_MODE: ${{ inputs.mode == 'synthetic-password' && 'synthetic-password' || inputs.mode == 'external-id' && 'entra-jwt' || 'mock' }}
+          VITE_USE_MOCK_API: ${{ inputs.mode == 'synthetic' && 'true' || 'false' }}
+          VITE_USE_MOCK_AUTH: ${{ inputs.mode == 'synthetic' && 'true' || 'false' }}
           VITE_ENTRA_CLIENT_ID: ${{ inputs.mode == 'external-id' && vars.VITE_ENTRA_CLIENT_ID || '' }}
           VITE_ENTRA_AUTHORITY: ${{ inputs.mode == 'external-id' && vars.VITE_ENTRA_AUTHORITY || '' }}
           VITE_AEGISBANK_API_SCOPE: ${{ inputs.mode == 'external-id' && vars.VITE_AEGISBANK_API_SCOPE || '' }}
