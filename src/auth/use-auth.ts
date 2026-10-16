@@ -76,7 +76,26 @@ state.signIn = async (dni?: string, password?: string) => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ dni, password }),
     });
-    if (!response.ok) throw new Error("DNI o contraseña no válidos");
+    if (!response.ok) {
+      if (response.status === 429) {
+        const retryAfter = response.headers.get("Retry-After");
+        const retrySeconds = retryAfter ? Number.parseInt(retryAfter, 10) : 0;
+        const retryMinutes =
+          Number.isFinite(retrySeconds) && retrySeconds > 60
+            ? Math.ceil(retrySeconds / 60)
+            : 0;
+        throw new Error(
+          retryMinutes > 0
+            ? `Demasiados intentos. Vuelve a intentarlo en ${retryMinutes} minutos.`
+            : "Demasiados intentos. Vuelve a intentarlo más tarde.",
+        );
+      }
+      if (response.status === 401)
+        throw new Error("DNI o contraseña no válidos");
+      throw new Error(
+        "No se pudo completar el inicio de sesión. Intenta nuevamente.",
+      );
+    }
     const result = (await response.json()) as {
       customer_id: string;
       csrf_token?: string;
