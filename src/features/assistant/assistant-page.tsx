@@ -19,8 +19,20 @@ export function AssistantPage() {
       <div
         className="mt-8 min-h-64 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
         aria-live="polite"
+        aria-busy={run.isPending}
       >
-        {run.data ? (
+        {run.isPending ? (
+          <div className="flex min-h-52 flex-col items-center justify-center gap-3 text-center">
+            <span
+              className="h-8 w-8 animate-spin rounded-full border-4 border-slate-200 border-t-blue-600"
+              aria-hidden="true"
+            />
+            <p className="font-medium text-slate-900">Consultando AegisBank…</p>
+            <p className="text-sm text-slate-500">
+              Estamos verificando tu información bancaria.
+            </p>
+          </div>
+        ) : run.data ? (
           <p>{run.data.answer}</p>
         ) : (
           <div>
@@ -50,6 +62,7 @@ export function AssistantPage() {
           value={message}
           onChange={(event) => setMessage(event.target.value)}
           placeholder="Ask in English or Spanish"
+          disabled={run.isPending}
         />
         <button
           className="min-h-12 rounded-lg bg-[#0f2747] px-5 py-3 font-medium text-white transition hover:bg-[#173b6c] focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"

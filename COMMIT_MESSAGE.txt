@@ -1,0 +1,23 @@
+fix(assistant): show live query progress and preserve customer binding
+
+Purpose
+Make the hosted assistant interaction visibly responsive while ensuring the
+browser sends only the user query and lets the authenticated API resolve the
+customer identity from the bearer session.
+
+Changes
+- render an accessible loading indicator and busy state while the assistant is
+  querying the Agent API
+- disable the message input during an in-flight request
+- remove the client-supplied customer_id from the agent request body
+
+Validation
+- pnpm format:check: PASS
+- pnpm lint: PASS
+- pnpm typecheck: PASS
+- pnpm test -- --run: PASS (7 tests)
+- pnpm build: PASS
+
+Remaining limits
+- The public Static Web App must be deployed from this commit before browser
+  acceptance of the loading state.
