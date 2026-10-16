@@ -13,6 +13,15 @@ const requestSchema = z.object({
   summary: z.string().trim().min(5, "Use at least five characters").max(240),
 });
 
+function formatValidationError(error: unknown): string {
+  if (typeof error === "string") return error;
+  if (error && typeof error === "object" && "message" in error) {
+    const message = (error as { message?: unknown }).message;
+    if (typeof message === "string") return message;
+  }
+  return "Revisa el resumen de la solicitud.";
+}
+
 export function ServiceRequestForm() {
   const form = useForm({
     defaultValues: { summary: "" },
@@ -62,7 +71,9 @@ export function ServiceRequestForm() {
                     className="mt-2 text-sm text-rose-600"
                     role="alert"
                   >
-                    {field.state.meta.errors.join(", ")}
+                    {field.state.meta.errors
+                      .map(formatValidationError)
+                      .join(" ")}
                   </p>
                 ) : null}
               </div>
@@ -81,6 +92,10 @@ export function ServiceRequestForm() {
               </Button>
             )}
           </form.Subscribe>
+          <p className="mt-3 text-xs text-slate-500">
+            La solicitud se enviará como propuesta y requerirá tu aprobación
+            explícita antes de crear un registro bancario.
+          </p>
         </form>
       </CardContent>
     </Card>
