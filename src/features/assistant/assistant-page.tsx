@@ -70,6 +70,7 @@ export function AssistantPage() {
 
   const transcriptRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const submissionInFlightRef = useRef<string | null>(null);
   const run = useAssistantRun();
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
@@ -164,7 +165,12 @@ export function AssistantPage() {
 
   const submitMessage = (textToSend: string) => {
     const cleanText = textToSend.trim();
-    if (!cleanText || run.isPending) return;
+    const submissionKey = `${sessionId}:${cleanText}`;
+    // React batches state updates, so two rapid submit events can arrive
+    // before TanStack Query exposes isPending. Keep an imperative guard for
+    // the short interval in which the mutation is being scheduled.
+    if (!cleanText || run.isPending || submissionInFlightRef.current === submissionKey) return;
+    submissionInFlightRef.current = submissionKey;
 
     const userMsg: ChatMessage = {
       id: `usr_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
@@ -180,6 +186,7 @@ export function AssistantPage() {
       { message: cleanText, sessionId },
       {
         onSuccess: (data) => {
+          submissionInFlightRef.current = null;
           if (data.session_id && data.session_id !== sessionId) {
             setSessionId(data.session_id);
           }
@@ -196,6 +203,7 @@ export function AssistantPage() {
           setMessages((prev) => [...prev, assistantMsg]);
         },
         onError: () => {
+          submissionInFlightRef.current = null;
           const errorMsg: ChatMessage = {
             id: `err_${Date.now()}`,
             role: "assistant",
