@@ -8,7 +8,7 @@ import {
   redirect,
   useNavigate,
 } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAuth } from "../auth/use-auth";
 import { AppShell } from "../components/shell/app-shell";
 import { Button } from "../components/ui/button";
@@ -32,7 +32,12 @@ function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const dniInputRef = useRef<HTMLInputElement>(null);
   const customerAuth = import.meta.env.VITE_AUTH_MODE === "synthetic-password";
+
+  useEffect(() => {
+    if (error && customerAuth) dniInputRef.current?.focus();
+  }, [customerAuth, error]);
 
   return (
     <main className="grid min-h-screen place-items-center bg-slate-50 p-6">
@@ -61,6 +66,7 @@ function LoginPage() {
               <label className="grid gap-1.5 text-sm font-medium text-slate-700">
                 DNI
                 <Input
+                  ref={dniInputRef}
                   value={dni}
                   onChange={(event) =>
                     setDni(event.target.value.replace(/\D/g, "").slice(0, 8))
