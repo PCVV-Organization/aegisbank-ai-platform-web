@@ -49,7 +49,7 @@ export function Avatar({
         {displayInitials}
       </div>
       {showStatus && (
-        <span className="absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-[#0f2747]" />
+        <span className="absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-[var(--sidebar-bg)]" />
       )}
     </div>
   );
