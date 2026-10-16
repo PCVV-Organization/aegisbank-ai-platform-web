@@ -29,7 +29,7 @@ function formatTime(isoString?: string): string {
 function sanitizeRestoredMessage(message: ChatMessage): ChatMessage {
   if (message.role !== "assistant") return message;
   const unsafe =
-    /functools\s*\(|\{\s*["']name["']\s*:\s*["'](?:search_knowledge|get_my_loans|get_loan_details|get_next_installment|create_service_request)/i.test(
+    /functools\s*\(|\[\s*\{\s*["']name["']|\{\s*["']name["']\s*:\s*["'](?:search_knowledge|get_my_loans|get_loan_details|get_next_installment|create_service_request)/i.test(
       message.content,
     );
   return unsafe
@@ -364,7 +364,9 @@ export function AssistantPage() {
                         : "rounded-tl-xs border border-slate-200/90 bg-slate-50 text-slate-900"
                     }`}
                   >
-                    <p className="whitespace-pre-wrap">{item.content}</p>
+                    <p className="whitespace-pre-wrap">
+                      {sanitizeRestoredMessage(item).content}
+                    </p>
                     {item.role === "assistant" && item.executionMode ? (
                       <span className="mt-2 block text-[10px] font-medium uppercase tracking-wide opacity-70">
                         {item.executionMode === "azure-foundry"
