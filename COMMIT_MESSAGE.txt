@@ -1,0 +1,19 @@
+fix(auth): send CSRF nonce from cross-origin SPA
+
+Purpose
+Allow browser requests from the Static Web App to pass the API's double-submit CSRF check when the readable cookie belongs to the API origin.
+
+Changes
+- retain the login CSRF nonce in memory from the login response
+- attach it to assistant and logout requests
+- preserve HttpOnly session-token handling and avoid localStorage/sessionStorage
+
+Validation
+- pnpm format:check: PASS
+- pnpm lint: PASS
+- pnpm typecheck: PASS
+- pnpm test -- --run: PASS (7 tests)
+- pnpm build: PASS
+
+Remaining limits
+- The frontend bundle must be published after the backend image containing the matching login response is deployed.
