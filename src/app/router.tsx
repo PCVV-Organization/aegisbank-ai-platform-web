@@ -216,7 +216,7 @@ const overviewRoute = createRoute({
       <div className="mt-8 grid gap-5 md:grid-cols-3">
         <Card className="p-5">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium uppercase tracking-wider text-slate-500">
+            <span className="text-xs font-semibold uppercase tracking-wider text-slate-600">
               Available balance
             </span>
             <Badge variant="success">Disponible</Badge>
@@ -224,14 +224,14 @@ const overviewRoute = createRoute({
           <p className="mt-3 text-3xl font-bold tracking-tight text-slate-950 tabular-nums">
             $12,480.00
           </p>
-          <p className="mt-1 text-xs text-slate-500">
+          <p className="mt-1 text-xs text-slate-600">
             Cuenta de cheques sintética · •••• 4021
           </p>
         </Card>
 
         <Card className="p-5">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium uppercase tracking-wider text-slate-500">
+            <span className="text-xs font-semibold uppercase tracking-wider text-slate-600">
               Open requests
             </span>
             <Badge variant="warning">En trámite</Badge>
@@ -239,27 +239,27 @@ const overviewRoute = createRoute({
           <p className="mt-3 text-3xl font-bold tracking-tight text-slate-950 tabular-nums">
             2
           </p>
-          <p className="mt-1 text-xs text-slate-500">
+          <p className="mt-1 text-xs text-slate-600">
             Solicitudes pendientes de atención
           </p>
         </Card>
 
         <Card className="p-5">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium uppercase tracking-wider text-slate-500">
+            <span className="text-xs font-semibold uppercase tracking-wider text-slate-600">
               Assistant
             </span>
             <Badge variant="ai">AI Banking</Badge>
           </div>
-          <p className="mt-3 text-sm text-slate-600">
+          <p className="mt-3 text-sm text-slate-700 leading-relaxed">
             Consultas inmediatas de saldo, préstamos y estado de reclamos.
           </p>
           <Link
-            className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-blue-600 hover:text-blue-800 transition-colors focus-visible:ring-2 focus-visible:ring-blue-500"
+            className="group mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-blue-700 hover:text-blue-900 transition-colors focus-visible:ring-2 focus-visible:ring-blue-500"
             to="/app/assistant"
           >
-            <AssistantIcon className="h-4 w-4" />
-            <span>Ask Aegis</span>
+            <AssistantIcon className="h-4 w-4 transition-transform duration-200 group-hover:scale-110 motion-reduce:transform-none" />
+            <span className="group-hover:underline">Ask Aegis</span>
           </Link>
         </Card>
       </div>
