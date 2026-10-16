@@ -33,10 +33,27 @@ let state: AuthState = {
   signOut: async () => undefined,
 };
 let syntheticToken: string | null = null;
-// The API session cookie is HttpOnly and lives on another origin, so the
-// browser cannot read the readable CSRF cookie with document.cookie. Keep the
-// nonce returned by login in memory and send it as the double-submit header.
-let syntheticCsrfToken: string | null = null;
+const CSRF_STORAGE_KEY = "aegisbank_csrf_token";
+let syntheticCsrfToken: string | null = (() => {
+  try {
+    return sessionStorage.getItem(CSRF_STORAGE_KEY);
+  } catch {
+    return null;
+  }
+})();
+
+function setCsrfToken(token: string | null) {
+  syntheticCsrfToken = token;
+  try {
+    if (token) {
+      sessionStorage.setItem(CSRF_STORAGE_KEY, token);
+    } else {
+      sessionStorage.removeItem(CSRF_STORAGE_KEY);
+    }
+  } catch {
+    // Ignore storage quota errors
+  }
+}
 const apiBase = import.meta.env.VITE_API_BASE_URL ?? "";
 const listeners = new Set<() => void>();
 const notify = () => listeners.forEach((listener) => listener());
@@ -65,7 +82,7 @@ state.signIn = async (dni?: string, password?: string) => {
       csrf_token?: string;
     };
     syntheticToken = null;
-    syntheticCsrfToken = result.csrf_token ?? null;
+    setCsrfToken(result.csrf_token ?? null);
     state = {
       ...state,
       user: { id: result.customer_id, name: `Customer ${result.customer_id}` },
@@ -90,7 +107,7 @@ state.signOut = async () => {
       headers: { "X-CSRF-Token": syntheticCsrfToken ?? csrfToken() ?? "" },
     });
     syntheticToken = null;
-    syntheticCsrfToken = null;
+    setCsrfToken(null);
     state = { ...state, user: null };
     notify();
     return;
@@ -122,7 +139,13 @@ export async function initializeAuth() {
         credentials: "include",
       });
       if (response.ok) {
-        const result = (await response.json()) as { customer_id: string };
+        const result = (await response.json()) as {
+          customer_id: string;
+          csrf_token?: string;
+        };
+        if (result.csrf_token) {
+          setCsrfToken(result.csrf_token);
+        }
         state = {
           ...state,
           user: {
@@ -148,6 +171,34 @@ function csrfToken(): string | null {
   return match?.[1] ? decodeURIComponent(match[1]) : null;
 }
 export const getCsrfToken = () => syntheticCsrfToken ?? csrfToken();
+export async function ensureCsrfToken(): Promise<string | null> {
+  if (syntheticCsrfToken) return syntheticCsrfToken;
+  const cookieCsrf = csrfToken();
+  if (cookieCsrf) {
+    setCsrfToken(cookieCsrf);
+    return cookieCsrf;
+  }
+  if (authMode === "synthetic-password" && apiBase) {
+    try {
+      const response = await fetch(`${apiBase}/api/v1/auth/me`, {
+        credentials: "include",
+      });
+      if (response.ok) {
+        const result = (await response.json()) as {
+          customer_id: string;
+          csrf_token?: string;
+        };
+        if (result.csrf_token) {
+          setCsrfToken(result.csrf_token);
+          return result.csrf_token;
+        }
+      }
+    } catch {
+      // Ignore
+    }
+  }
+  return null;
+}
 export const useAuth = Object.assign(
   function useAuthHook() {
     return useSyncExternalStore(
