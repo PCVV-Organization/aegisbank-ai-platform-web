@@ -9,13 +9,14 @@ const badgeVariants = cva(
       variant: {
         default:
           "border border-transparent bg-[var(--primary)] text-white shadow-2xs",
-        secondary: "border border-slate-200 bg-slate-100 text-slate-800",
+        secondary:
+          "border border-[var(--secondary-border)] bg-[var(--secondary)] text-[var(--secondary-foreground)]",
         success:
-          "border border-emerald-300/80 bg-emerald-50 text-emerald-800 shadow-2xs",
+          "border border-[var(--financial-positive-border)] bg-[var(--financial-positive-bg)] text-[var(--financial-positive-fg)] shadow-2xs",
         warning:
-          "border border-amber-300/80 bg-amber-50 text-amber-800 shadow-2xs",
+          "border border-[var(--financial-pending-border)] bg-[var(--financial-pending-bg)] text-[var(--financial-pending-fg)] shadow-2xs",
         destructive:
-          "border border-rose-300/80 bg-rose-50 text-rose-800 shadow-2xs",
+          "border border-[var(--financial-critical-border)] bg-[var(--financial-critical-bg)] text-[var(--financial-critical-fg)] shadow-2xs",
         outline: "border border-slate-300 text-slate-700",
         sidebarOnline:
           "border border-emerald-400/20 bg-emerald-400/15 text-emerald-200",

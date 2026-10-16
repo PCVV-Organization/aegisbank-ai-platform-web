@@ -2,7 +2,38 @@
 
 @layer base {
   :root {
-    /* Theme: Default AegisBank Corporate Navy */
+    /* ==========================================================================
+       1. PRIMARY ROLE (Brand Authority & High-Priority Actions)
+       ========================================================================== */
+    --primary: #0f2747;
+    --primary-hover: #173b6c;
+    --primary-active: #0a1b33;
+    --primary-foreground: #ffffff;
+    --primary-subtle: #e8edf5;
+    --primary-border: #173b6c;
+
+    /* ==========================================================================
+       2. SECONDARY ROLE (Hierarchy Separation, Card Panels, Secondary CTAs)
+       ========================================================================== */
+    --secondary: #f1f5f9;
+    --secondary-hover: #e2e8f0;
+    --secondary-active: #cbd5e1;
+    --secondary-foreground: #0f172a;
+    --secondary-border: #cbd5e1;
+
+    /* ==========================================================================
+       3. ACCENT & INTERACTIVE ROLE (Focus Rings, Badges, Links, AI Highlights)
+       ========================================================================== */
+    --accent: #2563eb;
+    --accent-hover: #1d4ed8;
+    --accent-foreground: #ffffff;
+    --ring: #2563eb;
+    --accent-subtle: #eff6ff;
+    --brand-accent: #2563eb;
+
+    /* ==========================================================================
+       4. SIDEBAR ROLE (High-Trust Navigation Dock)
+       ========================================================================== */
     --sidebar-bg: #0f2747;
     --sidebar-fg: #f8fafc;
     --sidebar-muted: #94a3b8;
@@ -11,18 +42,36 @@
     --sidebar-active: rgba(37, 99, 235, 0.25);
     --sidebar-active-border: #60a5fa;
 
-    --primary: #0f2747;
-    --primary-hover: #173b6c;
-    --primary-foreground: #ffffff;
-    --brand-accent: #2563eb;
-
-    /* Semantic Financial Tokens (banking-ui-ux) */
+    /* ==========================================================================
+       5. FINANCIAL SEMANTIC ROLES (banking-ui-ux Fintech Standards)
+       ========================================================================== */
+    /* Positive: Credits, deposits, approved, active session */
     --financial-positive: #059669;
-    --financial-pending: #d97706;
-    --financial-critical: #e11d48;
-    --financial-info: #2563eb;
+    --financial-positive-fg: #065f46;
+    --financial-positive-bg: #ecfdf5;
+    --financial-positive-border: #a7f3d0;
 
-    /* Surface & Component Tokens */
+    /* Pending: In-flight, processing, human review needed */
+    --financial-pending: #d97706;
+    --financial-pending-fg: #92400e;
+    --financial-pending-bg: #fffbeb;
+    --financial-pending-border: #fde68a;
+
+    /* Critical: Debts, overdue installments, alerts, errors */
+    --financial-critical: #e11d48;
+    --financial-critical-fg: #9f1239;
+    --financial-critical-bg: #fff1f2;
+    --financial-critical-border: #fecdd3;
+
+    /* Info: Conversational chips, assistant cues, neutral notices */
+    --financial-info: #2563eb;
+    --financial-info-fg: #1e40af;
+    --financial-info-bg: #eff6ff;
+    --financial-info-border: #bfdbfe;
+
+    /* ==========================================================================
+       6. BASE SURFACES & CANVAS
+       ========================================================================== */
     --background: #f8fafc;
     --foreground: #0f172a;
     --card: #ffffff;
@@ -30,7 +79,6 @@
     --muted: #f1f5f9;
     --muted-foreground: #64748b;
     --border: #e2e8f0;
-    --ring: #2563eb;
 
     font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     color: var(--foreground);
@@ -41,35 +89,95 @@
 
   /* Emerald Palette: Private Banking & Wealth Management */
   [data-theme="emerald"] {
-    --sidebar-bg: #064e3b;
-    --sidebar-active: rgba(16, 185, 129, 0.25);
-    --sidebar-active-border: #34d399;
     --primary: #064e3b;
     --primary-hover: #047857;
-    --brand-accent: #059669;
+    --primary-active: #022c22;
+    --primary-foreground: #ffffff;
+    --primary-subtle: #ecfdf5;
+    --primary-border: #047857;
+
+    --secondary: #f0fdf4;
+    --secondary-hover: #dcfce7;
+    --secondary-active: #bbf7d0;
+    --secondary-foreground: #064e3b;
+    --secondary-border: #86efac;
+
+    --accent: #059669;
+    --accent-hover: #047857;
+    --accent-foreground: #ffffff;
     --ring: #10b981;
+    --accent-subtle: #d1fae5;
+    --brand-accent: #059669;
+
+    --sidebar-bg: #064e3b;
+    --sidebar-fg: #f8fafc;
+    --sidebar-muted: #a7f3d0;
+    --sidebar-border: rgba(255, 255, 255, 0.1);
+    --sidebar-hover: rgba(255, 255, 255, 0.08);
+    --sidebar-active: rgba(16, 185, 129, 0.25);
+    --sidebar-active-border: #34d399;
   }
 
   /* Sapphire Palette: Digital Fintech & Innovation */
   [data-theme="sapphire"] {
-    --sidebar-bg: #1e3a8a;
-    --sidebar-active: rgba(59, 130, 246, 0.25);
-    --sidebar-active-border: #93c5fd;
     --primary: #1e3a8a;
     --primary-hover: #1d4ed8;
+    --primary-active: #172554;
+    --primary-foreground: #ffffff;
+    --primary-subtle: #eff6ff;
+    --primary-border: #1d4ed8;
+
+    --secondary: #f8fafc;
+    --secondary-hover: #f1f5f9;
+    --secondary-active: #e2e8f0;
+    --secondary-foreground: #1e293b;
+    --secondary-border: #cbd5e1;
+
+    --accent: #0284c7;
+    --accent-hover: #0369a1;
+    --accent-foreground: #ffffff;
+    --ring: #38bdf8;
+    --accent-subtle: #e0f2fe;
     --brand-accent: #3b82f6;
-    --ring: #3b82f6;
+
+    --sidebar-bg: #1e3a8a;
+    --sidebar-fg: #f8fafc;
+    --sidebar-muted: #93c5fd;
+    --sidebar-border: rgba(255, 255, 255, 0.1);
+    --sidebar-hover: rgba(255, 255, 255, 0.08);
+    --sidebar-active: rgba(59, 130, 246, 0.25);
+    --sidebar-active-border: #93c5fd;
   }
 
   /* Slate / Midnight Palette: Modern Executive Dark Sidebar */
   [data-theme="slate"] {
+    --primary: #090d16;
+    --primary-hover: #1e293b;
+    --primary-active: #020617;
+    --primary-foreground: #ffffff;
+    --primary-subtle: #f1f5f9;
+    --primary-border: #1e293b;
+
+    --secondary: #f8fafc;
+    --secondary-hover: #f1f5f9;
+    --secondary-active: #e2e8f0;
+    --secondary-foreground: #090d16;
+    --secondary-border: #cbd5e1;
+
+    --accent: #0284c7;
+    --accent-hover: #0369a1;
+    --accent-foreground: #ffffff;
+    --ring: #38bdf8;
+    --accent-subtle: #f0f9ff;
+    --brand-accent: #0284c7;
+
     --sidebar-bg: #090d16;
+    --sidebar-fg: #f8fafc;
+    --sidebar-muted: #94a3b8;
+    --sidebar-border: rgba(255, 255, 255, 0.1);
+    --sidebar-hover: rgba(255, 255, 255, 0.08);
     --sidebar-active: rgba(148, 163, 184, 0.2);
     --sidebar-active-border: #38bdf8;
-    --primary: #0f172a;
-    --primary-hover: #1e293b;
-    --brand-accent: #0284c7;
-    --ring: #38bdf8;
   }
 
   * {
