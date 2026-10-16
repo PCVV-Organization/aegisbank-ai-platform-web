@@ -1,16 +1,19 @@
 import { useMutation } from "@tanstack/react-query";
 import { apiFetch } from "../../api/transport";
 
-export type AssistantMessage = {
+export interface ChatMessage {
+  id: string;
   role: "user" | "assistant";
   content: string;
-  created_at?: string;
-};
+  timestamp: string;
+}
 
-export type AssistantRunResponse = {
+export interface AssistantRunResponse {
   answer: string;
   session_id?: string;
-};
+  customer_id?: string;
+  rounds?: number;
+}
 
 export function useAssistantRun() {
   return useMutation({
@@ -23,13 +26,10 @@ export function useAssistantRun() {
     }) =>
       apiFetch<AssistantRunResponse>("/api/v1/agent/run", {
         method: "POST",
-        body: JSON.stringify({ query: message, session_id: sessionId }),
+        body: JSON.stringify({
+          query: message,
+          session_id: sessionId,
+        }),
       }),
   });
-}
-
-export function loadAssistantMessages(sessionId: string) {
-  return apiFetch<AssistantMessage[]>(
-    `/api/v1/conversations/${encodeURIComponent(sessionId)}/messages`,
-  );
 }

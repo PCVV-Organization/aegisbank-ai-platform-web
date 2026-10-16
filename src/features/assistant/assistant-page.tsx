@@ -1,195 +1,412 @@
 import { useEffect, useRef, useState } from "react";
-import {
-  loadAssistantMessages,
-  type AssistantMessage,
-  useAssistantRun,
-} from "./use-assistant-run";
+import { useAuth } from "../../auth/use-auth";
+import { type ChatMessage, useAssistantRun } from "./use-assistant-run";
+
+const QUICK_SUGGESTIONS = [
+  "¿Cuál es mi saldo disponible?",
+  "¿Cuántos préstamos tengo activos?",
+  "¿Cuándo es mi próxima fecha de pago?",
+  "¿Tengo alguna cuota vencida?",
+  "Quiero registrar un reclamo de servicio",
+];
+
+function formatTime(isoString?: string): string {
+  const date = isoString ? new Date(isoString) : new Date();
+  return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+}
 
 export function AssistantPage() {
+  const { user } = useAuth();
+  const customerId = user?.id || "CUST-0001";
+  const storageKey = `aegisbank_chat_history_${customerId}`;
+  const sessionKey = `aegisbank_chat_session_${customerId}`;
+
   const [message, setMessage] = useState("");
-  const [sessionId, setSessionId] = useState<string>();
-  const [messages, setMessages] = useState<AssistantMessage[]>([]);
-  const transcriptRef = useRef<HTMLDivElement>(null);
-  const run = useAssistantRun();
-  useEffect(() => {
-    if (run.data?.session_id && run.data.session_id !== sessionId) {
-      setSessionId(run.data.session_id);
+  const [sessionId, setSessionId] = useState<string>(() => {
+    try {
+      const saved = sessionStorage.getItem(sessionKey);
+      if (saved) return saved;
+      const initial = `sess_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+      sessionStorage.setItem(sessionKey, initial);
+      return initial;
+    } catch {
+      return `sess_${Date.now()}_default`;
     }
-  }, [run.data?.session_id, sessionId]);
+  });
+
+  const [messages, setMessages] = useState<ChatMessage[]>(() => {
+    try {
+      const saved = sessionStorage.getItem(storageKey);
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const transcriptRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const run = useAssistantRun();
+
+  // Keep sessionStorage in sync whenever messages change
   useEffect(() => {
-    if (!sessionId) return;
-    loadAssistantMessages(sessionId)
-      .then(setMessages)
-      .catch(() => undefined);
-  }, [sessionId]);
+    try {
+      sessionStorage.setItem(storageKey, JSON.stringify(messages));
+    } catch {
+      // Ignore quota errors in constrained environments
+    }
+  }, [messages, storageKey]);
+
+  // Keep sessionStorage in sync for sessionId
   useEffect(() => {
-    transcriptRef.current?.scrollTo({
-      top: transcriptRef.current.scrollHeight,
-    });
+    try {
+      sessionStorage.setItem(sessionKey, sessionId);
+    } catch {
+      // Ignore
+    }
+  }, [sessionId, sessionKey]);
+
+  // Auto-scroll to the newest message or typing indicator
+  useEffect(() => {
+    if (transcriptRef.current) {
+      transcriptRef.current.scrollTo({
+        top: transcriptRef.current.scrollHeight,
+        behavior: "smooth",
+      });
+    }
   }, [messages, run.isPending]);
-  const submitMessage = (value: string) => {
-    const content = value.trim();
-    if (!content || run.isPending) return;
-    setMessages((current) => [...current, { role: "user", content }]);
+
+  const handleStartNewChat = () => {
+    const nextSession = `sess_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+    setSessionId(nextSession);
+    setMessages([]);
+    try {
+      sessionStorage.removeItem(storageKey);
+      sessionStorage.setItem(sessionKey, nextSession);
+    } catch {
+      // Ignore
+    }
+    inputRef.current?.focus();
+  };
+
+  const submitMessage = (textToSend: string) => {
+    const cleanText = textToSend.trim();
+    if (!cleanText || run.isPending) return;
+
+    const userMsg: ChatMessage = {
+      id: `usr_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+      role: "user",
+      content: cleanText,
+      timestamp: new Date().toISOString(),
+    };
+
+    setMessages((prev) => [...prev, userMsg]);
+    setMessage("");
+
     run.mutate(
-      sessionId ? { message: content, sessionId } : { message: content },
+      { message: cleanText, sessionId },
       {
-        onSuccess: (response) => {
-          if (response.session_id) setSessionId(response.session_id);
-          setMessages((current) => [
-            ...current,
-            { role: "assistant", content: response.answer },
-          ]);
+        onSuccess: (data) => {
+          if (data.session_id && data.session_id !== sessionId) {
+            setSessionId(data.session_id);
+          }
+          const assistantMsg: ChatMessage = {
+            id: `ast_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+            role: "assistant",
+            content: data.answer,
+            timestamp: new Date().toISOString(),
+          };
+          setMessages((prev) => [...prev, assistantMsg]);
+        },
+        onError: () => {
+          const errorMsg: ChatMessage = {
+            id: `err_${Date.now()}`,
+            role: "assistant",
+            content:
+              "Lo sentimos, no pudimos conectar con el asistente bancario en este momento. Por favor verifica tu conexión y vuelve a intentar.",
+            timestamp: new Date().toISOString(),
+          };
+          setMessages((prev) => [...prev, errorMsg]);
         },
       },
     );
   };
-  const suggestedPrompts = [
-    "¿Cuántos préstamos tengo?",
-    "¿Cuándo me toca pagar?",
-    "¿Cuál es mi saldo disponible?",
-  ];
+
   return (
-    <section className="mx-auto max-w-5xl">
-      <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
-        <div>
-          <p className="mb-2 text-sm font-semibold uppercase tracking-[0.16em] text-blue-700">
-            Digital banking · secure support
-          </p>
-          <h1 className="text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">
-            Aegis assistant
-          </h1>
-          <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">
-            Your private banking companion for balances, loans and service
-            requests. Ask in English or Spanish.
-          </p>
-        </div>
-        <div className="inline-flex items-center gap-2 self-start rounded-full border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700 sm:self-auto">
-          <span
-            className="h-2 w-2 rounded-full bg-emerald-500"
-            aria-hidden="true"
-          />
-          Protected session
-        </div>
-      </div>
-      <div className="mt-8 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-[0_18px_45px_-28px_rgba(15,39,71,0.5)]">
-        <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/80 px-5 py-4 sm:px-7">
+    <section className="mx-auto flex h-[calc(100vh-6.5rem)] max-w-5xl flex-col">
+      {/* Header with High-Trust Banking Branding & Session Controls */}
+      <header className="mb-4 flex flex-shrink-0 flex-col gap-3 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-3">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#0f2747] to-[#1e3a8a] text-white shadow-sm">
+            <svg
+              className="h-6 w-6"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth="2"
+              aria-hidden="true"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+              />
+            </svg>
+          </div>
           <div>
-            <p className="font-semibold text-slate-950">AegisBank support</p>
-            <p className="mt-1 text-xs text-slate-500">
-              Answers grounded in your synthetic account
+            <div className="flex items-center gap-2">
+              <h1 className="text-lg font-bold text-slate-900 sm:text-xl">
+                Aegis assistant
+              </h1>
+              <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-semibold text-blue-800">
+                AI Banking
+              </span>
+            </div>
+            <p className="text-xs text-slate-500">
+              Soporte bancario inteligente · Cliente:{" "}
+              <span className="font-semibold text-slate-700">{customerId}</span>
             </p>
           </div>
-          <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700">
-            AI assisted
-          </span>
         </div>
+
+        <div className="flex items-center justify-between gap-3 sm:justify-end">
+          <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-800">
+            <span
+              className="h-2 w-2 animate-pulse rounded-full bg-emerald-500"
+              aria-hidden="true"
+            />
+            Sesión segura
+          </div>
+          <button
+            type="button"
+            onClick={handleStartNewChat}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-100 hover:text-slate-900 focus-visible:ring-2 focus-visible:ring-blue-600"
+            title="Iniciar una nueva conversación limpia"
+          >
+            <svg
+              className="h-3.5 w-3.5 text-slate-500"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth="2"
+              aria-hidden="true"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+              />
+            </svg>
+            Nueva conversación
+          </button>
+        </div>
+      </header>
+
+      {/* Main Conversational Timeline Container */}
+      <div className="flex flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm">
+        {/* Scrollable Message Transcript */}
         <div
           ref={transcriptRef}
-          className="flex min-h-[22rem] max-h-[32rem] flex-col gap-4 overflow-y-auto p-5 sm:p-7"
+          className="flex-1 space-y-4 overflow-y-auto p-4 sm:p-6"
+          role="log"
           aria-live="polite"
+          aria-atomic="false"
           aria-busy={run.isPending}
         >
           {messages.length === 0 && !run.isPending ? (
-            <div>
-              <div className="rounded-2xl bg-slate-50 p-5">
-                <p className="font-semibold text-slate-900">How can I help?</p>
-                <p className="mt-2 text-sm leading-6 text-slate-500">
-                  Choose a suggestion or write your question below. Your
-                  conversation stays linked to this protected session.
+            <div className="my-auto flex flex-col items-center justify-center py-8 text-center">
+              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-50 text-blue-700 shadow-inner">
+                <svg
+                  className="h-8 w-8"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth="1.75"
+                  aria-hidden="true"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                  />
+                </svg>
+              </div>
+              <h2 className="mt-4 text-lg font-bold text-slate-900 sm:text-xl">
+                ¿En qué puedo orientarte hoy?
+              </h2>
+              <p className="mt-1.5 max-w-md text-sm text-slate-500">
+                Consulta tus saldos, el estado de tus préstamos o solicita
+                información institucional en tiempo real.
+              </p>
+
+              {/* Empty state suggestions */}
+              <div className="mt-6 flex w-full max-w-lg flex-col gap-2">
+                <p className="text-left text-xs font-semibold uppercase tracking-wider text-slate-400">
+                  Consultas sugeridas
                 </p>
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {suggestedPrompts.map((prompt) => (
-                    <button
-                      type="button"
-                      key={prompt}
-                      className="rounded-full border border-slate-200 bg-white px-3 py-2 text-left text-xs font-medium text-slate-700 transition hover:border-blue-300 hover:text-blue-700 focus-visible:ring-2 focus-visible:ring-blue-600"
-                      onClick={() => submitMessage(prompt)}
+                {QUICK_SUGGESTIONS.map((suggestion) => (
+                  <button
+                    key={suggestion}
+                    type="button"
+                    onClick={() => submitMessage(suggestion)}
+                    className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50/70 p-3 text-left text-sm font-medium text-slate-700 transition hover:border-blue-300 hover:bg-blue-50/50 hover:text-blue-900 focus-visible:ring-2 focus-visible:ring-blue-600"
+                  >
+                    <span>{suggestion}</span>
+                    <span className="text-xs text-slate-400" aria-hidden="true">
+                      →
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : null}
+
+          {/* Render All Historical & Active Messages */}
+          {messages.map((item) => (
+            <div
+              key={item.id}
+              className={`flex w-full ${
+                item.role === "user" ? "justify-end" : "justify-start"
+              }`}
+            >
+              <div
+                className={`flex max-w-[88%] gap-3 sm:max-w-[75%] ${
+                  item.role === "user" ? "flex-row-reverse" : "flex-row"
+                }`}
+              >
+                {/* Avatar Icon */}
+                {item.role === "assistant" ? (
+                  <div className="flex h-8 w-8 shrink-0 select-none items-center justify-center rounded-full bg-[#0f2747] text-white shadow-xs">
+                    <span className="text-xs font-bold">AB</span>
+                  </div>
+                ) : (
+                  <div className="flex h-8 w-8 shrink-0 select-none items-center justify-center rounded-full bg-slate-200 text-slate-700 shadow-xs">
+                    <span className="text-xs font-bold">Tú</span>
+                  </div>
+                )}
+
+                {/* Message Body & Metadata */}
+                <div className="flex flex-col">
+                  <div
+                    className={`rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-xs ${
+                      item.role === "user"
+                        ? "rounded-tr-xs bg-[#0f2747] text-white"
+                        : "rounded-tl-xs border border-slate-200/90 bg-slate-50 text-slate-900"
+                    }`}
+                  >
+                    <p className="whitespace-pre-wrap">{item.content}</p>
+                  </div>
+                  <span
+                    className={`mt-1 text-[10px] text-slate-400 ${
+                      item.role === "user" ? "text-right" : "text-left"
+                    }`}
+                  >
+                    {formatTime(item.timestamp)}
+                  </span>
+                </div>
+              </div>
+            </div>
+          ))}
+
+          {/* In-Stream Typing Indicator (Never Blanks the Chat) */}
+          {run.isPending ? (
+            <div className="flex w-full justify-start">
+              <div className="flex max-w-[85%] items-start gap-3">
+                <div className="flex h-8 w-8 shrink-0 select-none items-center justify-center rounded-full bg-[#0f2747] text-white shadow-xs">
+                  <span className="text-xs font-bold">AB</span>
+                </div>
+                <div className="flex flex-col">
+                  <div className="inline-flex items-center gap-2 rounded-2xl rounded-tl-xs border border-slate-200/80 bg-slate-50 px-4 py-3 shadow-xs">
+                    <div
+                      className="flex items-center gap-1.5"
+                      aria-hidden="true"
                     >
-                      {prompt}
-                    </button>
-                  ))}
+                      <span className="h-2 w-2 animate-bounce rounded-full bg-blue-600 [animation-delay:-0.3s]" />
+                      <span className="h-2 w-2 animate-bounce rounded-full bg-blue-600 [animation-delay:-0.15s]" />
+                      <span className="h-2 w-2 animate-bounce rounded-full bg-blue-600" />
+                    </div>
+                    <span className="text-xs font-medium text-slate-500">
+                      Consultando AegisBank…
+                    </span>
+                  </div>
+                  <span className="mt-1 text-[10px] text-slate-400">
+                    Verificando información bancaria
+                  </span>
                 </div>
               </div>
             </div>
           ) : null}
-          {messages.map((item, index) => (
-            <div
-              className={
-                item.role === "user" ? "flex justify-end" : "flex justify-start"
-              }
-              key={`${item.role}-${item.created_at ?? index}-${index}`}
-            >
-              <p
-                className={
-                  item.role === "user"
-                    ? "max-w-[85%] rounded-2xl rounded-br-md bg-[#0f2747] px-4 py-3 text-white"
-                    : "max-w-[85%] rounded-2xl rounded-bl-md bg-slate-100 px-4 py-3 text-slate-900"
-                }
-              >
-                {item.content}
-              </p>
-            </div>
-          ))}
-          {run.isPending ? (
-            <div className="flex min-h-52 flex-col items-center justify-center gap-3 text-center">
-              <span
-                className="h-8 w-8 animate-spin rounded-full border-4 border-slate-200 border-t-blue-600 motion-reduce:animate-none"
-                aria-hidden="true"
-              />
-              <p className="font-medium text-slate-900" role="status">
-                Consultando AegisBank…
-              </p>
-              <p className="text-sm text-slate-500">
-                Estamos verificando tu información bancaria.
-              </p>
-            </div>
-          ) : null}
         </div>
+
+        {/* Quick Suggestion Chips (Docked above input when chat is active) */}
+        {messages.length > 0 && !run.isPending ? (
+          <div className="flex gap-2 overflow-x-auto border-t border-slate-100 bg-slate-50/60 px-4 py-2 text-xs">
+            <span className="flex shrink-0 items-center font-medium text-slate-400">
+              Sugerencias:
+            </span>
+            {QUICK_SUGGESTIONS.slice(0, 3).map((suggestion) => (
+              <button
+                key={suggestion}
+                type="button"
+                onClick={() => submitMessage(suggestion)}
+                className="shrink-0 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-slate-600 transition hover:border-blue-300 hover:text-blue-700"
+              >
+                {suggestion}
+              </button>
+            ))}
+          </div>
+        ) : null}
+
+        {/* Interactive Chat Form Input Bar */}
         <form
-          className="border-t border-slate-100 bg-slate-50/70 p-4 sm:p-5"
-          onSubmit={(event) => {
-            event.preventDefault();
-            if (message.trim()) {
-              submitMessage(message);
-              setMessage("");
-            }
+          className="border-t border-slate-200/80 bg-white p-3 sm:p-4"
+          onSubmit={(e) => {
+            e.preventDefault();
+            submitMessage(message);
           }}
         >
-          <label className="sr-only" htmlFor="assistant-message">
-            Message
-          </label>
-          <div className="flex gap-2">
+          <div className="relative flex items-center">
+            <label htmlFor="assistant-message" className="sr-only">
+              Message
+            </label>
             <input
+              ref={inputRef}
               id="assistant-message"
-              className="min-h-12 min-w-0 flex-1 rounded-xl border border-slate-300 bg-white px-4 py-3 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+              type="text"
+              className="h-12 w-full rounded-xl border border-slate-300 bg-slate-50/50 pl-4 pr-24 text-sm text-slate-900 shadow-inner transition placeholder:text-slate-400 focus:border-blue-600 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-100 disabled:cursor-not-allowed disabled:opacity-60"
               value={message}
-              onChange={(event) => setMessage(event.target.value)}
-              placeholder="Ask in English or Spanish"
+              onChange={(e) => setMessage(e.target.value)}
+              placeholder="Ask in English or Spanish (e.g. what is my balance?)"
               disabled={run.isPending}
             />
             <button
-              className="min-h-12 rounded-xl bg-[#0f2747] px-5 py-3 font-semibold text-white transition hover:bg-[#173b6c] focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-              disabled={run.isPending}
+              type="submit"
+              disabled={!message.trim() || run.isPending}
+              className="absolute right-1.5 flex h-9 items-center gap-1.5 rounded-lg bg-[#0f2747] px-3.5 text-xs font-semibold text-white transition hover:bg-[#173b6c] focus-visible:ring-2 focus-visible:ring-blue-600 disabled:cursor-not-allowed disabled:opacity-40"
+              aria-label="Send"
             >
-              <span className="inline-flex items-center gap-2">
-                Send <span aria-hidden="true">↑</span>
-              </span>
+              <span>Send</span>
+              <svg
+                className="h-3.5 w-3.5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M5 10l7-7m0 0l7 7m-7-7v18"
+                />
+              </svg>
             </button>
           </div>
-          <p className="mt-2 text-xs text-slate-500">
-            Never share your password or full card number in chat.
+          <p className="mt-2 text-center text-[11px] text-slate-400">
+            AegisBank nunca te solicitará tu contraseña ni tu código de
+            seguridad por este canal.
           </p>
         </form>
       </div>
-      {run.error ? (
-        <p
-          role="alert"
-          className="mt-3 rounded-lg bg-red-50 p-3 text-sm text-red-800"
-        >
-          We could not reach the assistant. Please try again.
-        </p>
-      ) : null}
     </section>
   );
 }
