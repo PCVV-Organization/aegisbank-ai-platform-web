@@ -47,12 +47,15 @@ export function AppShell() {
   const navigate = useNavigate();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
 
   useEffect(() => {
     initTheme();
   }, []);
 
   const handleSignOut = () => {
+    if (isSigningOut) return;
+    setIsSigningOut(true);
     void signOut()
       .catch(() => undefined)
       .finally(() => navigate({ to: "/login" }));
@@ -226,9 +229,18 @@ export function AppShell() {
                       variant="sidebarDestructive"
                       size="icon"
                       onClick={handleSignOut}
+                      disabled={isSigningOut}
+                      aria-busy={isSigningOut}
                       aria-label="Cerrar sesión"
                     >
-                      <LogoutIcon className="h-5 w-5" />
+                      {isSigningOut ? (
+                        <span
+                          className="h-5 w-5 animate-spin rounded-full border-2 border-white/40 border-t-white"
+                          aria-hidden="true"
+                        />
+                      ) : (
+                        <LogoutIcon className="h-5 w-5" />
+                      )}
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent side="right">Cerrar sesión</TooltipContent>
@@ -262,9 +274,18 @@ export function AppShell() {
                       variant="sidebarDestructive"
                       size="icon"
                       onClick={handleSignOut}
+                      disabled={isSigningOut}
+                      aria-busy={isSigningOut}
                       aria-label="Cerrar sesión"
                     >
-                      <LogoutIcon className="h-5 w-5" />
+                      {isSigningOut ? (
+                        <span
+                          className="h-5 w-5 animate-spin rounded-full border-2 border-white/40 border-t-white"
+                          aria-hidden="true"
+                        />
+                      ) : (
+                        <LogoutIcon className="h-5 w-5" />
+                      )}
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent side="top">Cerrar sesión</TooltipContent>
@@ -319,6 +340,22 @@ export function AppShell() {
               </Badge>
             </div>
           </header>
+
+          {isSigningOut ? (
+            <div
+              className="pointer-events-none fixed inset-x-0 top-16 z-20 flex justify-center px-4 pt-3"
+              role="status"
+              aria-live="polite"
+            >
+              <div className="flex items-center gap-2 rounded-full border border-blue-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 shadow-lg">
+                <span
+                  className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-blue-200 border-t-blue-700"
+                  aria-hidden="true"
+                />
+                Cerrando sesión de forma segura…
+              </div>
+            </div>
+          ) : null}
 
           <div className="flex-1 p-4 md:p-8 lg:p-10">
             <Outlet />

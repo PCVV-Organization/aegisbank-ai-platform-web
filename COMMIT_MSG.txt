@@ -1,0 +1,18 @@
+feat(auth): show secure sign-out progress
+
+Purpose
+Make the remote sign-out operation visible and prevent duplicate submissions.
+
+Changes
+- disable both desktop and collapsed sign-out controls while signing out
+- show animated progress indicators and an accessible live status banner
+- preserve the existing login redirect and fail-safe session behavior
+
+Validation
+- pnpm format:check: PASS
+- pnpm lint: PASS
+- pnpm typecheck: PASS
+- git diff --check: PASS
+
+Remaining limits
+- browser deployment smoke verification remains a CI/staging responsibility
