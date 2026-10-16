@@ -3,6 +3,7 @@ import { useForm } from "@tanstack/react-form";
 import { z } from "zod";
 import { Link } from "@tanstack/react-router";
 import { useAuth } from "../../auth/use-auth";
+import { apiFetch } from "../../api/transport";
 import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
 import {
@@ -31,16 +32,6 @@ const CATEGORY_OPTIONS: {
   { value: "FEE", label: "Revisión de comisiones o cargos" },
 ];
 
-const INITIAL_REQUESTS: ServiceRequestItem[] = [
-  {
-    id: "SR-000001",
-    category: "LOAN",
-    summary: "Revisión de reprogramación de cuota de préstamo activo.",
-    status: "OPEN",
-    createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
-  },
-];
-
 const requestSchema = z.object({
   category: z.enum(["LOAN", "INSTALLMENT", "FEE", "GENERAL"]),
   summary: z
@@ -67,33 +58,51 @@ function formatDate(isoString: string): string {
 
 export function ServiceRequestForm() {
   const { user } = useAuth();
-  const customerId = user?.id || "CUST-0001";
-  const storageKey = `aegisbank_requests_${customerId}`;
-
-  const [requests, setRequests] = useState<ServiceRequestItem[]>(() => {
-    try {
-      const saved = sessionStorage.getItem(storageKey);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-      }
-    } catch {
-      // Fallback
-    }
-    return INITIAL_REQUESTS;
-  });
+  const [requests, setRequests] = useState<ServiceRequestItem[]>([]);
+  const [isLoadingRequests, setIsLoadingRequests] = useState(true);
+  const [requestsError, setRequestsError] = useState<string | null>(null);
 
   const [submittedTicket, setSubmittedTicket] =
     useState<ServiceRequestItem | null>(null);
 
-  // Sync to sessionStorage
   useEffect(() => {
-    try {
-      sessionStorage.setItem(storageKey, JSON.stringify(requests));
-    } catch {
-      // Ignore quota errors
-    }
-  }, [requests, storageKey]);
+    let cancelled = false;
+    setIsLoadingRequests(true);
+    setRequestsError(null);
+    void apiFetch<{
+      items: Array<{
+        service_request_id: string;
+        category: ServiceRequestItem["category"];
+        description: string;
+        status: ServiceRequestItem["status"];
+        created_at: string;
+      }>;
+    }>("/api/v1/me/service-requests")
+      .then((response) => {
+        if (cancelled) return;
+        setRequests(
+          response.items.map((item) => ({
+            id: item.service_request_id,
+            category: item.category,
+            summary: item.description,
+            status: item.status,
+            createdAt: item.created_at,
+          })),
+        );
+      })
+      .catch(() => {
+        if (!cancelled)
+          setRequestsError(
+            "No se pudo cargar el historial desde Core Banking. Intenta nuevamente.",
+          );
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoadingRequests(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id]);
 
   const form = useForm({
     defaultValues: {
@@ -105,20 +114,10 @@ export function ServiceRequestForm() {
     },
     onSubmit: async ({ value }) => {
       const parsed = requestSchema.parse(value);
-      const nextNum = requests.length + 1;
-      const nextId = `SR-${String(nextNum).padStart(6, "0")}`;
-
-      const newRequest: ServiceRequestItem = {
-        id: nextId,
-        category: parsed.category,
-        summary: parsed.summary,
-        status: "OPEN",
-        createdAt: new Date().toISOString(),
-      };
-
-      setRequests((prev) => [newRequest, ...prev]);
-      setSubmittedTicket(newRequest);
-      form.reset();
+      void parsed;
+      setRequestsError(
+        "La radicación requiere una aprobación humana explícita. El formulario aún no crea registros localmente.",
+      );
     },
   });
 
@@ -348,7 +347,28 @@ export function ServiceRequestForm() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              {requests.length === 0 ? (
+              {isLoadingRequests ? (
+                <div
+                  className="py-8 text-center text-sm text-slate-500"
+                  role="status"
+                >
+                  Cargando solicitudes desde Core Banking…
+                </div>
+              ) : requestsError ? (
+                <div
+                  className="space-y-3 py-6 text-center text-sm text-rose-700"
+                  role="alert"
+                >
+                  <p>{requestsError}</p>
+                  <button
+                    type="button"
+                    className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                    onClick={() => window.location.reload()}
+                  >
+                    Reintentar
+                  </button>
+                </div>
+              ) : requests.length === 0 ? (
                 <div className="py-8 text-center text-sm text-slate-500">
                   No tienes solicitudes registradas.
                 </div>

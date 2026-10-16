@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "../../auth/use-auth";
 import { apiFetch } from "../../api/transport";
-import { type ChatMessage, useAssistantRun } from "./use-assistant-run";
+import { type ChatMessage } from "./api/assistant-contracts";
+import { useAssistantRun } from "./queries/use-assistant-run";
 
 interface PersistedConversationTurn {
   id: string;
