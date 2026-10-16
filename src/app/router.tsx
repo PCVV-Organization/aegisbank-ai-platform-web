@@ -496,9 +496,11 @@ function AppShell() {
                 </svg>
               </button>
 
-              <div className="flex items-center gap-2 text-xs font-medium text-slate-600 md:text-sm">
-                <span className="text-slate-400">Portal AegisBank</span>
-                <span className="text-slate-300">/</span>
+              <div className="flex items-center gap-2 text-xs md:text-sm font-medium">
+                <span className="text-slate-600">Portal AegisBank</span>
+                <span aria-hidden="true" className="text-slate-400 select-none">
+                  /
+                </span>
                 <span className="font-semibold text-slate-900">
                   Banca Digital Inteligente
                 </span>
@@ -507,14 +509,14 @@ function AppShell() {
 
             <div className="flex items-center gap-3">
               {/* Security Pill */}
-              <div className="hidden items-center gap-1.5 rounded-full border border-emerald-200/80 bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700 shadow-2xs sm:inline-flex">
-                <LockIcon className="h-3.5 w-3.5 text-emerald-600" />
+              <div className="hidden items-center gap-1.5 rounded-full border border-emerald-300/80 bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800 shadow-2xs sm:inline-flex">
+                <LockIcon className="h-3.5 w-3.5 text-emerald-700" />
                 <span>Sesión segura · Cloud Staging</span>
               </div>
 
               {/* Customer Chip */}
-              <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700">
-                <span className="h-2 w-2 rounded-full bg-emerald-500" />
+              <div className="flex items-center gap-2 rounded-full border border-slate-300 bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-800">
+                <span className="h-2 w-2 rounded-full bg-emerald-600" />
                 <span>{user?.name ?? "Guest"}</span>
               </div>
             </div>
