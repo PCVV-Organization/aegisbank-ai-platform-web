@@ -1,9 +1,17 @@
 import { apiFetch } from "../../../api/transport";
 import type {
+  ApprovalRequest,
   AssistantRunInput,
   AssistantRunResponse,
   PersistedConversationTurn,
 } from "./assistant-contracts";
+
+export function decideAssistantApproval(approvalId: string, approved: boolean) {
+  return apiFetch<{ approval: ApprovalRequest; executed: boolean }>(
+    `/api/v1/approvals/${encodeURIComponent(approvalId)}`,
+    { method: "POST", body: JSON.stringify({ approved }) },
+  );
+}
 
 export function runAssistant({
   message,

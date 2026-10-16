@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "../../auth/use-auth";
 import { type ChatMessage } from "./api/assistant-contracts";
+import { decideAssistantApproval } from "./api/assistant-api";
 import { useAssistantRun } from "./queries/use-assistant-run";
 import { useConversationHistory } from "./queries/use-conversation-history";
 
@@ -70,8 +71,35 @@ export function AssistantPage() {
 
   const transcriptRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const submissionInFlightRef = useRef<string | null>(null);
   const run = useAssistantRun();
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [approvingId, setApprovingId] = useState<string | null>(null);
+
+  const handleApproval = async (approvalId: string, approved: boolean) => {
+    setApprovingId(approvalId);
+    try {
+      await decideAssistantApproval(approvalId, approved);
+      setMessages((current) =>
+        current.map((message) =>
+          message.approvalRequests?.some(
+            (request) => request.approval_id === approvalId,
+          )
+            ? {
+                ...message,
+                approvalRequests: message.approvalRequests.map((request) =>
+                  request.approval_id === approvalId
+                    ? { ...request, status: approved ? "EXECUTED" : "REJECTED" }
+                    : request,
+                ),
+              }
+            : message,
+        ),
+      );
+    } finally {
+      setApprovingId(null);
+    }
+  };
 
   const handleCopy = async (id: string, text: string) => {
     try {
@@ -164,7 +192,17 @@ export function AssistantPage() {
 
   const submitMessage = (textToSend: string) => {
     const cleanText = textToSend.trim();
-    if (!cleanText || run.isPending) return;
+    const submissionKey = `${sessionId}:${cleanText}`;
+    // React batches state updates, so two rapid submit events can arrive
+    // before TanStack Query exposes isPending. Keep an imperative guard for
+    // the short interval in which the mutation is being scheduled.
+    if (
+      !cleanText ||
+      run.isPending ||
+      submissionInFlightRef.current === submissionKey
+    )
+      return;
+    submissionInFlightRef.current = submissionKey;
 
     const userMsg: ChatMessage = {
       id: `usr_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
@@ -180,6 +218,7 @@ export function AssistantPage() {
       { message: cleanText, sessionId },
       {
         onSuccess: (data) => {
+          submissionInFlightRef.current = null;
           if (data.session_id && data.session_id !== sessionId) {
             setSessionId(data.session_id);
           }
@@ -192,10 +231,12 @@ export function AssistantPage() {
             latencyMs: data.latency_ms,
             toolCount: data.tool_count,
             rounds: data.rounds,
+            approvalRequests: data.approval_requests,
           };
           setMessages((prev) => [...prev, assistantMsg]);
         },
         onError: () => {
+          submissionInFlightRef.current = null;
           const errorMsg: ChatMessage = {
             id: `err_${Date.now()}`,
             role: "assistant",
@@ -379,6 +420,43 @@ export function AssistantPage() {
                     <p className="whitespace-pre-wrap">
                       {sanitizeRestoredMessage(item).content}
                     </p>
+
+                    {item.approvalRequests
+                      ?.filter((request) => request.status === "PENDING")
+                      .map((request) => (
+                        <div
+                          key={request.approval_id}
+                          className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-950"
+                        >
+                          <p className="font-semibold">Aprobación necesaria</p>
+                          <p className="mt-1">
+                            Se propone registrar esta solicitud en Core Banking.
+                            No se ejecutará sin tu confirmación.
+                          </p>
+                          <div className="mt-2 flex gap-2">
+                            <button
+                              type="button"
+                              disabled={approvingId === request.approval_id}
+                              onClick={() =>
+                                void handleApproval(request.approval_id, true)
+                              }
+                              className="rounded-lg bg-emerald-700 px-3 py-1.5 font-semibold text-white disabled:opacity-50"
+                            >
+                              Aprobar y registrar
+                            </button>
+                            <button
+                              type="button"
+                              disabled={approvingId === request.approval_id}
+                              onClick={() =>
+                                void handleApproval(request.approval_id, false)
+                              }
+                              className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 font-semibold text-slate-700 disabled:opacity-50"
+                            >
+                              Rechazar
+                            </button>
+                          </div>
+                        </div>
+                      ))}
 
                     {item.role === "assistant" &&
                     (item.executionMode || item.latencyMs !== undefined) ? (

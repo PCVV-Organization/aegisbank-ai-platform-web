@@ -11,6 +11,14 @@ export interface ChatMessage {
   latencyMs?: number | undefined;
   toolCount?: number | undefined;
   rounds?: number | undefined;
+  approvalRequests?: ApprovalRequest[] | undefined;
+}
+
+export interface ApprovalRequest {
+  approval_id: string;
+  tool_name: string;
+  normalized_arguments: Record<string, unknown>;
+  status: "PENDING" | "APPROVED" | "REJECTED" | "EXECUTED";
 }
 
 export interface AssistantRunInput {
@@ -27,6 +35,7 @@ export interface AssistantRunResponse {
   execution_mode: "azure-foundry" | "deterministic" | "cloud-fallback";
   latency_ms?: number;
   tool_count?: number;
+  approval_requests?: ApprovalRequest[];
 }
 
 export interface PersistedConversationTurn {
