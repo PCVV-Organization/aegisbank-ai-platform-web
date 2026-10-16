@@ -114,6 +114,7 @@ export function AssistantPage() {
             role: "assistant",
             content: data.answer,
             timestamp: new Date().toISOString(),
+            executionMode: data.execution_mode,
           };
           setMessages((prev) => [...prev, assistantMsg]);
         },
@@ -136,7 +137,7 @@ export function AssistantPage() {
       {/* Header with High-Trust Banking Branding & Session Controls */}
       <header className="mb-4 flex flex-shrink-0 flex-col gap-3 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#0f2747] to-[#1e3a8a] text-white shadow-sm">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--primary)] to-[var(--primary-hover)] text-white shadow-sm">
             <svg
               className="h-6 w-6"
               fill="none"
@@ -275,7 +276,7 @@ export function AssistantPage() {
               >
                 {/* Avatar Icon */}
                 {item.role === "assistant" ? (
-                  <div className="flex h-8 w-8 shrink-0 select-none items-center justify-center rounded-full bg-[#0f2747] text-white shadow-xs">
+                  <div className="flex h-8 w-8 shrink-0 select-none items-center justify-center rounded-full bg-[var(--primary)] text-white shadow-xs">
                     <span className="text-xs font-bold">AB</span>
                   </div>
                 ) : (
@@ -289,11 +290,20 @@ export function AssistantPage() {
                   <div
                     className={`rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-xs ${
                       item.role === "user"
-                        ? "rounded-tr-xs bg-[#0f2747] text-white"
+                        ? "rounded-tr-xs bg-[var(--primary)] text-white"
                         : "rounded-tl-xs border border-slate-200/90 bg-slate-50 text-slate-900"
                     }`}
                   >
                     <p className="whitespace-pre-wrap">{item.content}</p>
+                    {item.role === "assistant" && item.executionMode ? (
+                      <span className="mt-2 block text-[10px] font-medium uppercase tracking-wide opacity-70">
+                        {item.executionMode === "azure-foundry"
+                          ? "Azure AI Foundry"
+                          : item.executionMode === "cloud-fallback"
+                            ? "Fallback cloud"
+                            : "Consulta estructurada"}
+                      </span>
+                    ) : null}
                   </div>
                   <span
                     className={`mt-1 text-[10px] text-slate-400 ${
@@ -311,7 +321,7 @@ export function AssistantPage() {
           {run.isPending ? (
             <div className="flex w-full justify-start">
               <div className="flex max-w-[85%] items-start gap-3">
-                <div className="flex h-8 w-8 shrink-0 select-none items-center justify-center rounded-full bg-[#0f2747] text-white shadow-xs">
+                <div className="flex h-8 w-8 shrink-0 select-none items-center justify-center rounded-full bg-[var(--primary)] text-white shadow-xs">
                   <span className="text-xs font-bold">AB</span>
                 </div>
                 <div className="flex flex-col">
@@ -382,7 +392,7 @@ export function AssistantPage() {
               type="submit"
               disabled={!message.trim() || run.isPending}
               aria-busy={run.isPending}
-              className="absolute right-1.5 flex h-9 items-center gap-1.5 rounded-lg bg-[#0f2747] px-3.5 text-xs font-semibold text-white transition hover:bg-[#173b6c] focus-visible:ring-2 focus-visible:ring-blue-600 disabled:cursor-not-allowed disabled:opacity-40"
+              className="absolute right-1.5 flex h-9 items-center gap-1.5 rounded-lg bg-[var(--primary)] px-3.5 text-xs font-semibold text-white transition hover:bg-[var(--primary-hover)] focus-visible:ring-2 focus-visible:ring-blue-600 disabled:cursor-not-allowed disabled:opacity-40"
               aria-label="Send"
             >
               {run.isPending ? (
