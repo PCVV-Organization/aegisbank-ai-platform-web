@@ -214,7 +214,7 @@ const overviewRoute = createRoute({
   component: () => (
     <Page title="Overview">
       <div className="mt-8 grid gap-5 md:grid-cols-3">
-        <Card className="p-5">
+        <Card className="p-5 animate-fade-in">
           <div className="flex items-center justify-between">
             <span className="text-xs font-medium uppercase tracking-wider text-slate-500">
               Available balance
@@ -229,7 +229,7 @@ const overviewRoute = createRoute({
           </p>
         </Card>
 
-        <Card className="p-5">
+        <Card className="p-5 animate-fade-in [animation-delay:80ms]">
           <div className="flex items-center justify-between">
             <span className="text-xs font-medium uppercase tracking-wider text-slate-500">
               Open requests
@@ -244,7 +244,7 @@ const overviewRoute = createRoute({
           </p>
         </Card>
 
-        <Card className="p-5">
+        <Card className="p-5 animate-fade-in [animation-delay:160ms]">
           <div className="flex items-center justify-between">
             <span className="text-xs font-medium uppercase tracking-wider text-slate-500">
               Assistant
@@ -255,11 +255,11 @@ const overviewRoute = createRoute({
             Consultas inmediatas de saldo, préstamos y estado de reclamos.
           </p>
           <Link
-            className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-blue-600 hover:text-blue-800 transition-colors focus-visible:ring-2 focus-visible:ring-blue-500"
+            className="group mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-blue-600 hover:text-blue-800 transition-colors focus-visible:ring-2 focus-visible:ring-blue-500"
             to="/app/assistant"
           >
-            <AssistantIcon className="h-4 w-4" />
-            <span>Ask Aegis</span>
+            <AssistantIcon className="h-4 w-4 transition-transform duration-200 group-hover:scale-110 motion-reduce:transform-none" />
+            <span className="group-hover:underline">Ask Aegis</span>
           </Link>
         </Card>
       </div>

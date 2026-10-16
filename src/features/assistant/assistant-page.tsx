@@ -245,11 +245,11 @@ export function AssistantPage() {
           <button
             type="button"
             onClick={handleStartNewChat}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-100 hover:text-slate-900 focus-visible:ring-2 focus-visible:ring-blue-600"
+            className="group inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700 transition-all duration-150 hover:bg-slate-100 hover:border-slate-300 active:scale-95 focus-visible:ring-2 focus-visible:ring-blue-600 motion-reduce:transform-none"
             title="Iniciar una nueva conversación limpia"
           >
             <svg
-              className="h-3.5 w-3.5 text-slate-500"
+              className="h-3.5 w-3.5 text-slate-500 transition-transform duration-300 group-hover:rotate-180 motion-reduce:transform-none"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -314,10 +314,13 @@ export function AssistantPage() {
                     key={suggestion}
                     type="button"
                     onClick={() => submitMessage(suggestion)}
-                    className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50/70 p-3 text-left text-sm font-medium text-slate-700 transition hover:border-blue-300 hover:bg-blue-50/50 hover:text-blue-900 focus-visible:ring-2 focus-visible:ring-blue-600"
+                    className="group flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50/70 p-3 text-left text-sm font-medium text-slate-700 transition-all duration-150 hover:-translate-y-0.5 hover:border-blue-300 hover:bg-blue-50/50 hover:text-blue-900 hover:shadow-xs active:scale-[0.99] focus-visible:ring-2 focus-visible:ring-blue-600 motion-reduce:transform-none"
                   >
                     <span>{suggestion}</span>
-                    <span className="text-xs text-slate-400" aria-hidden="true">
+                    <span
+                      className="text-xs text-slate-400 transition-transform duration-150 group-hover:translate-x-1 motion-reduce:transform-none"
+                      aria-hidden="true"
+                    >
                       →
                     </span>
                   </button>
@@ -331,7 +334,9 @@ export function AssistantPage() {
             <div
               key={item.id}
               className={`flex w-full ${
-                item.role === "user" ? "justify-end" : "justify-start"
+                item.role === "user"
+                  ? "justify-end animate-message-right"
+                  : "justify-start animate-message-left"
               }`}
             >
               <div
@@ -384,7 +389,7 @@ export function AssistantPage() {
 
           {/* In-Stream Typing Indicator (Never Blanks the Chat) */}
           {run.isPending ? (
-            <div className="flex w-full justify-start">
+            <div className="flex w-full justify-start animate-message-left">
               <div className="flex max-w-[85%] items-start gap-3">
                 <div className="flex h-8 w-8 shrink-0 select-none items-center justify-center rounded-full bg-[var(--primary)] text-white shadow-xs">
                   <span className="text-xs font-bold">AB</span>
@@ -423,7 +428,7 @@ export function AssistantPage() {
                 key={suggestion}
                 type="button"
                 onClick={() => submitMessage(suggestion)}
-                className="shrink-0 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-slate-600 transition hover:border-blue-300 hover:text-blue-700"
+                className="shrink-0 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-slate-600 shadow-2xs transition-all duration-150 hover:-translate-y-0.5 hover:border-blue-400 hover:text-blue-700 hover:shadow-xs active:scale-95 motion-reduce:transform-none"
               >
                 {suggestion}
               </button>
@@ -457,7 +462,7 @@ export function AssistantPage() {
               type="submit"
               disabled={!message.trim() || run.isPending}
               aria-busy={run.isPending}
-              className="absolute right-1.5 flex h-9 items-center gap-1.5 rounded-lg bg-[var(--primary)] px-3.5 text-xs font-semibold text-white transition hover:bg-[var(--primary-hover)] focus-visible:ring-2 focus-visible:ring-blue-600 disabled:cursor-not-allowed disabled:opacity-40"
+              className="group absolute right-1.5 flex h-9 items-center gap-1.5 rounded-lg bg-[var(--primary)] px-3.5 text-xs font-semibold text-white shadow-xs transition-all duration-150 hover:bg-[var(--primary-hover)] active:scale-95 focus-visible:ring-2 focus-visible:ring-blue-600 disabled:cursor-not-allowed disabled:opacity-40 motion-reduce:transform-none"
               aria-label="Send"
             >
               {run.isPending ? (
@@ -473,7 +478,7 @@ export function AssistantPage() {
               )}
               {!run.isPending && (
                 <svg
-                  className="h-3.5 w-3.5"
+                  className="h-3.5 w-3.5 transition-transform duration-150 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 motion-reduce:transform-none"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
