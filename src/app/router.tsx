@@ -183,6 +183,7 @@ function LoginPage() {
           </div>
         )}
         <button
+          type="button"
           className="min-h-12 w-full rounded-lg bg-[#0f2747] px-4 py-3 font-medium text-white transition hover:bg-[#173b6c] focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
           disabled={loading}
           onClick={async () => {
@@ -205,14 +206,42 @@ function LoginPage() {
             }
           }}
         >
-          {customerAuth
-            ? loading
-              ? "Validando…"
-              : "Iniciar sesión"
-            : import.meta.env.VITE_USE_MOCK_AUTH !== "false"
-              ? "Start synthetic demo"
-              : "Sign in"}
+          {loading ? (
+            <span className="inline-flex items-center justify-center gap-2">
+              <span
+                className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white motion-reduce:animate-none"
+                aria-hidden="true"
+              />
+              <span>Validando tu identidad…</span>
+            </span>
+          ) : (
+            <span className="inline-flex items-center justify-center gap-2">
+              <svg
+                aria-hidden="true"
+                className="h-4 w-4"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+                <path d="m10 17 5-5-5-5M15 12H3" />
+              </svg>
+              <span>
+                {customerAuth
+                  ? "Iniciar sesión"
+                  : import.meta.env.VITE_USE_MOCK_AUTH !== "false"
+                    ? "Start synthetic demo"
+                    : "Sign in"}
+              </span>
+            </span>
+          )}
         </button>
+        {loading && (
+          <p className="mt-3 text-center text-sm text-slate-500" role="status">
+            Conectando con AegisBank de forma segura…
+          </p>
+        )}
       </section>
     </main>
   );
