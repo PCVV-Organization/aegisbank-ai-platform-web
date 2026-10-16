@@ -161,7 +161,7 @@ export function ServiceRequestForm() {
                   supervisión bancaria auditada. Puedes consultar su estado en
                   cualquier momento con nuestro Asistente de IA.
                 </p>
-                <div className="break-words pt-1 text-[11px] font-medium leading-5 text-emerald-700">
+                <div className="break-words whitespace-pre-wrap pt-1 text-[11px] font-medium leading-5 text-emerald-700">
                   <span className="font-semibold">Resumen:</span>{" "}
                   <q>{submittedTicket.summary}</q>
                 </div>
@@ -477,9 +477,9 @@ export function ServiceRequestForm() {
                 </div>
               ) : (
                 requests.map((item) => (
-                    <div
-                      key={item.id}
-                      className="flex min-w-0 flex-col gap-2 rounded-xl border border-slate-200/80 bg-slate-50/60 p-3.5 transition-all hover:border-slate-300 hover:bg-slate-50 hover:shadow-2xs"
+                  <div
+                    key={item.id}
+                    className="flex min-w-0 flex-col gap-2 rounded-xl border border-slate-200/80 bg-slate-50/60 p-3.5 transition-all hover:border-slate-300 hover:bg-slate-50 hover:shadow-2xs"
                   >
                     <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
                       <span className="min-w-0 break-all font-mono text-xs font-bold text-slate-900">
@@ -502,7 +502,7 @@ export function ServiceRequestForm() {
                             : "Resuelta"}
                       </Badge>
                     </div>
-                    <p className="break-words text-xs font-medium leading-5 text-slate-800">
+                    <p className="break-words whitespace-pre-wrap text-xs font-medium leading-5 text-slate-800">
                       {item.summary}
                     </p>
                     <div className="mt-1 flex min-w-0 flex-wrap items-start gap-2 text-[11px] leading-4 text-slate-500">
@@ -510,7 +510,10 @@ export function ServiceRequestForm() {
                         {CATEGORY_OPTIONS.find((c) => c.value === item.category)
                           ?.label || item.category}
                       </span>
-                      <time className="break-words pt-0.5" dateTime={item.createdAt}>
+                      <time
+                        className="break-words pt-0.5"
+                        dateTime={item.createdAt}
+                      >
                         {formatDate(item.createdAt)}
                       </time>
                     </div>
