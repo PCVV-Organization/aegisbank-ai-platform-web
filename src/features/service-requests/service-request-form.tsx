@@ -1,11 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useForm } from "@tanstack/react-form";
 import { z } from "zod";
 import { Link } from "@tanstack/react-router";
-import { useAuth } from "../../auth/use-auth";
-import { apiFetch } from "../../api/transport";
 import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
+import { Skeleton } from "../../components/ui/skeleton";
 import {
   Card,
   CardHeader,
@@ -13,17 +12,14 @@ import {
   CardDescription,
   CardContent,
 } from "../../components/ui/card";
-
-export interface ServiceRequestItem {
-  id: string;
-  category: "LOAN" | "INSTALLMENT" | "FEE" | "GENERAL";
-  summary: string;
-  status: "OPEN" | "IN_REVIEW" | "RESOLVED";
-  createdAt: string;
-}
+import { useServiceRequests } from "./queries/use-service-requests";
+import type {
+  ServiceRequestItem,
+  ServiceRequestCategory,
+} from "./api/service-request-contracts";
 
 const CATEGORY_OPTIONS: {
-  value: ServiceRequestItem["category"];
+  value: ServiceRequestCategory;
   label: string;
 }[] = [
   { value: "GENERAL", label: "Consulta general institucional" },
@@ -57,66 +53,25 @@ function formatDate(isoString: string): string {
 }
 
 export function ServiceRequestForm() {
-  const { user } = useAuth();
-  const [requests, setRequests] = useState<ServiceRequestItem[]>([]);
-  const [isLoadingRequests, setIsLoadingRequests] = useState(true);
-  const [requestsError, setRequestsError] = useState<string | null>(null);
+  const { requests, isLoading, isError: error } = useServiceRequests();
 
   const [submittedTicket, setSubmittedTicket] =
     useState<ServiceRequestItem | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    setIsLoadingRequests(true);
-    setRequestsError(null);
-    void apiFetch<{
-      items: Array<{
-        service_request_id: string;
-        category: ServiceRequestItem["category"];
-        description: string;
-        status: ServiceRequestItem["status"];
-        created_at: string;
-      }>;
-    }>("/api/v1/me/service-requests")
-      .then((response) => {
-        if (cancelled) return;
-        setRequests(
-          response.items.map((item) => ({
-            id: item.service_request_id,
-            category: item.category,
-            summary: item.description,
-            status: item.status,
-            createdAt: item.created_at,
-          })),
-        );
-      })
-      .catch(() => {
-        if (!cancelled)
-          setRequestsError(
-            "No se pudo cargar el historial desde Core Banking. Intenta nuevamente.",
-          );
-      })
-      .finally(() => {
-        if (!cancelled) setIsLoadingRequests(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [user?.id]);
+  const [submissionError, setSubmissionError] = useState<string | null>(null);
 
   const form = useForm({
     defaultValues: {
-      category: "GENERAL" as ServiceRequestItem["category"],
+      category: "GENERAL" as ServiceRequestCategory,
       summary: "",
     },
     validators: {
       onChange: requestSchema,
     },
     onSubmit: async ({ value }) => {
-      const parsed = requestSchema.parse(value);
-      void parsed;
-      setRequestsError(
-        "La radicación requiere una aprobación humana explícita. El formulario aún no crea registros localmente.",
+      setSubmissionError(null);
+      requestSchema.parse(value);
+      setSubmissionError(
+        "La solicitud requiere aprobación humana explícita antes de crear un registro en Core Banking.",
       );
     },
   });
@@ -148,63 +103,94 @@ export function ServiceRequestForm() {
                   />
                 </svg>
               </div>
-              <div>
+              <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <h2 className="text-base font-bold text-slate-900">
-                    Solicitud {submittedTicket.id} registrada con éxito
-                  </h2>
-                  <Badge variant="success">Radicada</Badge>
+                  <h3 className="text-sm font-semibold text-emerald-950">
+                    Solicitud radicada con éxito
+                  </h3>
+                  <Badge variant="outline" className="font-mono text-xs">
+                    {submittedTicket.id}
+                  </Badge>
                 </div>
-                <p className="mt-1 text-sm text-slate-700">
-                  {submittedTicket.summary}
+                <p className="text-xs text-emerald-800 leading-relaxed">
+                  Tu requerimiento ha sido registrado en el sistema bajo
+                  supervisión bancaria auditada. Puedes consultar su estado en
+                  cualquier momento con nuestro Asistente de IA.
                 </p>
-                <p className="mt-2 text-xs text-slate-600">
-                  <span className="font-semibold text-slate-800">
-                    Gobernanza bancaria HITL:
-                  </span>{" "}
-                  Esta solicitud ha sido radicada formalmente bajo el protocolo
-                  de supervisión humana. Puedes realizar seguimiento a su estado
-                  en cualquier momento mediante el Asistente Aegis.
-                </p>
+                <div className="pt-1 text-[11px] font-medium text-emerald-700">
+                  Resumen: &ldquo;{submittedTicket.summary}&rdquo;
+                </div>
               </div>
             </div>
 
-            <div className="flex shrink-0 items-center gap-2 pt-1 sm:pt-0">
-              <Link
-                to="/app/assistant"
-                className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--primary)] px-3.5 py-2 text-xs font-semibold text-white shadow-xs transition-all duration-150 hover:bg-[var(--primary-hover)] active:scale-95 motion-reduce:transform-none"
+            <div className="flex items-center gap-2 self-end sm:self-center">
+              <Button
+                variant="outline"
+                size="sm"
+                asChild
+                className="border-emerald-300 bg-white text-emerald-900 hover:bg-emerald-100"
               >
-                <span>Consultar en Asistente</span>
-                <span aria-hidden="true">→</span>
-              </Link>
+                <Link
+                  to="/app/assistant"
+                  search={{
+                    q: `¿Cuál es el estado de mi solicitud ${submittedTicket.id}?`,
+                  }}
+                >
+                  Consultar con IA →
+                </Link>
+              </Button>
               <button
                 type="button"
                 onClick={() => setSubmittedTicket(null)}
-                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
+                aria-label="Cerrar notificación"
+                className="rounded-lg p-1 text-emerald-700 hover:bg-emerald-200/50"
               >
-                Cerrar
+                <svg
+                  className="h-4 w-4"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  aria-hidden="true"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                    clipRule="evenodd"
+                  />
+                </svg>
               </button>
             </div>
           </div>
         </div>
       ) : null}
 
-      <div className="grid gap-8 lg:grid-cols-12">
+      {/* Main Grid: Form on Left, History on Right */}
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
         {/* Creation Form Column */}
         <div className="lg:col-span-7">
           <Card className="shadow-sm">
-            <CardHeader>
-              <CardTitle>Nueva solicitud de servicio</CardTitle>
+            <CardHeader className="pb-4">
+              <CardTitle className="text-lg sm:text-xl">
+                Nueva solicitud o reclamo
+              </CardTitle>
               <CardDescription>
-                Registra una consulta formal, reclamo o trámite supervisado en
-                AegisBank.
+                Registra consultas operativas, reprogramaciones o revisiones de
+                comisiones sobre tus productos sintéticos.
               </CardDescription>
             </CardHeader>
             <CardContent>
+              {submissionError ? (
+                <div
+                  role="alert"
+                  className="mb-4 rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs text-rose-800"
+                >
+                  {submissionError}
+                </div>
+              ) : null}
+
               <form
-                onSubmit={(event) => {
-                  event.preventDefault();
-                  event.stopPropagation();
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
                   void form.handleSubmit();
                 }}
                 className="space-y-4"
@@ -212,23 +198,24 @@ export function ServiceRequestForm() {
                 {/* Category Selector */}
                 <form.Field name="category">
                   {(field) => (
-                    <div>
+                    <div className="space-y-1.5">
                       <label
-                        className="mb-1.5 block text-sm font-semibold text-slate-700"
                         htmlFor={field.name}
+                        className="text-xs font-semibold text-slate-700"
                       >
-                        Categoría de la solicitud
+                        Categoría de solicitud
                       </label>
                       <select
                         id={field.name}
-                        className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 shadow-2xs transition hover:border-slate-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                        name={field.name}
                         value={field.state.value}
                         onBlur={field.handleBlur}
                         onChange={(e) =>
                           field.handleChange(
-                            e.target.value as ServiceRequestItem["category"],
+                            e.target.value as ServiceRequestCategory,
                           )
                         }
+                        className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 shadow-xs transition-colors focus:border-blue-600 focus:outline-hidden focus:ring-2 focus:ring-blue-600/20"
                       >
                         {CATEGORY_OPTIONS.map((opt) => (
                           <option key={opt.value} value={opt.value}>
@@ -236,47 +223,50 @@ export function ServiceRequestForm() {
                           </option>
                         ))}
                       </select>
+                      {field.state.meta.errors ? (
+                        <p className="text-xs text-rose-600">
+                          {field.state.meta.errors.join(", ")}
+                        </p>
+                      ) : null}
                     </div>
                   )}
                 </form.Field>
 
-                {/* Summary Textarea */}
+                {/* Summary / Description Textarea */}
                 <form.Field name="summary">
                   {(field) => (
-                    <div>
-                      <label
-                        className="mb-1.5 block text-sm font-semibold text-slate-700"
-                        htmlFor={field.name}
-                      >
-                        Resumen detallado
-                      </label>
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <label
+                          htmlFor={field.name}
+                          className="text-xs font-semibold text-slate-700"
+                        >
+                          Descripción del caso
+                        </label>
+                        <span className="text-[11px] text-slate-600">
+                          {field.state.value.length}/240
+                        </span>
+                      </div>
                       <textarea
                         id={field.name}
-                        rows={4}
-                        className="w-full rounded-lg border border-slate-300 p-3 text-sm text-slate-900 shadow-2xs transition placeholder:text-slate-400 hover:border-slate-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100"
-                        placeholder="Describe detalladamente el requerimiento, cuota, préstamo o consulta..."
+                        name={field.name}
+                        rows={3}
                         value={field.state.value}
                         onBlur={field.handleBlur}
                         onChange={(e) => field.handleChange(e.target.value)}
-                        aria-describedby={`${field.name}-error`}
+                        placeholder="Ejemplo: Solicito reprogramación de cuota de crédito por cambio en fecha de pago laboral..."
+                        className="w-full resize-none rounded-xl border border-slate-300 bg-white p-3 text-sm text-slate-900 shadow-xs placeholder:text-slate-600 transition-colors focus:border-blue-600 focus:outline-hidden focus:ring-2 focus:ring-blue-600/20"
                       />
-                      {field.state.meta.errors.length > 0 ? (
-                        <p
-                          id={`${field.name}-error`}
-                          className="mt-1.5 text-xs font-medium text-rose-600"
-                          role="alert"
-                        >
-                          {field.state.meta.errors.join(" ")}
+                      {field.state.meta.errors ? (
+                        <p className="text-xs text-rose-600">
+                          {field.state.meta.errors.join(", ")}
                         </p>
-                      ) : (
-                        <p className="mt-1 text-xs text-slate-500">
-                          Mínimo 5 caracteres y máximo 240 caracteres.
-                        </p>
-                      )}
+                      ) : null}
                     </div>
                   )}
                 </form.Field>
 
+                {/* Submit button & HITL notice */}
                 <form.Subscribe
                   selector={(state) => [state.canSubmit, state.isSubmitting]}
                 >
@@ -292,7 +282,7 @@ export function ServiceRequestForm() {
                             className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/40 border-t-white"
                             aria-hidden="true"
                           />
-                          <span>Guardando…</span>
+                          <span>Guardando en Core Banking…</span>
                         </>
                       ) : (
                         "Registrar solicitud"
@@ -339,7 +329,9 @@ export function ServiceRequestForm() {
                   Tus solicitudes registradas
                 </CardTitle>
                 <Badge variant="outline" className="font-mono">
-                  {requests.length} activa{requests.length === 1 ? "" : "s"}
+                  {isLoading
+                    ? "..."
+                    : `${requests.length} activa${requests.length === 1 ? "" : "s"}`}
                 </Badge>
               </div>
               <CardDescription>
@@ -347,26 +339,28 @@ export function ServiceRequestForm() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              {isLoadingRequests ? (
+              {isLoading ? (
                 <div
-                  className="py-8 text-center text-sm text-slate-500"
+                  className="space-y-3"
                   role="status"
+                  aria-label="Cargando solicitudes"
                 >
-                  Cargando solicitudes desde Core Banking…
-                </div>
-              ) : requestsError ? (
-                <div
-                  className="space-y-3 py-6 text-center text-sm text-rose-700"
-                  role="alert"
-                >
-                  <p>{requestsError}</p>
-                  <button
-                    type="button"
-                    className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-                    onClick={() => window.location.reload()}
-                  >
-                    Reintentar
-                  </button>
+                  {[1, 2].map((i) => (
+                    <div
+                      key={i}
+                      className="flex flex-col gap-2 rounded-xl border border-slate-200/80 bg-slate-50/60 p-3.5"
+                    >
+                      <div className="flex items-center justify-between">
+                        <Skeleton className="h-4 w-20" />
+                        <Skeleton className="h-4 w-16" />
+                      </div>
+                      <Skeleton className="h-3.5 w-full" />
+                      <div className="mt-1 flex items-center justify-between">
+                        <Skeleton className="h-3 w-28" />
+                        <Skeleton className="h-3 w-20" />
+                      </div>
+                    </div>
+                  ))}
                 </div>
               ) : requests.length === 0 ? (
                 <div className="py-8 text-center text-sm text-slate-500">
@@ -412,6 +406,12 @@ export function ServiceRequestForm() {
                   </div>
                 ))
               )}
+
+              {error ? (
+                <div className="pt-2 text-center text-xs text-amber-700">
+                  Mostrando registros sincronizados en tu sesión local.
+                </div>
+              ) : null}
             </CardContent>
           </Card>
         </div>
