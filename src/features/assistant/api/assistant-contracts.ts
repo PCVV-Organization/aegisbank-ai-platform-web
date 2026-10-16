@@ -28,3 +28,16 @@ export interface AssistantRunResponse {
   latency_ms?: number;
   tool_count?: number;
 }
+
+export interface PersistedConversationTurn {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  timestamp: string;
+  metadata?: {
+    execution_mode?: ChatMessage["executionMode"];
+    rounds?: number;
+    tool_count?: number;
+    latency_ms?: number;
+  };
+}

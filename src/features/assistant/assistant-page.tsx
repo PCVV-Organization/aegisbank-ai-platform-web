@@ -1,21 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "../../auth/use-auth";
-import { apiFetch } from "../../api/transport";
 import { type ChatMessage } from "./api/assistant-contracts";
 import { useAssistantRun } from "./queries/use-assistant-run";
-
-interface PersistedConversationTurn {
-  id: string;
-  role: "user" | "assistant";
-  content: string;
-  timestamp: string;
-  metadata?: {
-    execution_mode?: ChatMessage["executionMode"];
-    rounds?: number;
-    tool_count?: number;
-    latency_ms?: number;
-  };
-}
+import { useConversationHistory } from "./queries/use-conversation-history";
 
 const QUICK_SUGGESTIONS = [
   "¿Cuál es mi saldo disponible?",
@@ -107,51 +94,41 @@ export function AssistantPage() {
     }
   }, [messages, storageKey]);
 
+  const { data: remoteTurns } = useConversationHistory(sessionId);
+
   // Rehydrate the active session from the customer-partitioned Cosmos history.
   // Browser storage is only a fast cache; the server remains authoritative.
   useEffect(() => {
-    let cancelled = false;
-    void apiFetch<PersistedConversationTurn[]>(
-      `/api/v1/conversations/${encodeURIComponent(sessionId)}`,
-    )
-      .then((turns) => {
-        if (cancelled || !turns.length) return;
-        const restored = turns.map((turn) =>
-          sanitizeRestoredMessage({
-            id: turn.id,
-            role: turn.role,
-            content: turn.content,
-            timestamp: turn.timestamp,
-            ...(turn.metadata?.execution_mode
-              ? { executionMode: turn.metadata.execution_mode }
-              : {}),
-            ...(typeof turn.metadata?.latency_ms === "number"
-              ? { latencyMs: turn.metadata.latency_ms }
-              : {}),
-            ...(typeof turn.metadata?.tool_count === "number"
-              ? { toolCount: turn.metadata.tool_count }
-              : {}),
-            ...(typeof turn.metadata?.rounds === "number"
-              ? { rounds: turn.metadata.rounds }
-              : {}),
-          }),
-        );
-        setMessages((current) => {
-          const byId = new Map(current.map((item) => [item.id, item]));
-          for (const item of restored) byId.set(item.id, item);
-          return [...byId.values()].sort(
-            (a, b) =>
-              new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
-          );
-        });
-      })
-      .catch(() => {
-        // A transient history outage must not prevent the cached chat from opening.
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [sessionId]);
+    if (!remoteTurns || !remoteTurns.length) return;
+    const restored = remoteTurns.map((turn) =>
+      sanitizeRestoredMessage({
+        id: turn.id,
+        role: turn.role,
+        content: turn.content,
+        timestamp: turn.timestamp,
+        ...(turn.metadata?.execution_mode
+          ? { executionMode: turn.metadata.execution_mode }
+          : {}),
+        ...(typeof turn.metadata?.latency_ms === "number"
+          ? { latencyMs: turn.metadata.latency_ms }
+          : {}),
+        ...(typeof turn.metadata?.tool_count === "number"
+          ? { toolCount: turn.metadata.tool_count }
+          : {}),
+        ...(typeof turn.metadata?.rounds === "number"
+          ? { rounds: turn.metadata.rounds }
+          : {}),
+      }),
+    );
+    setMessages((current) => {
+      const byId = new Map(current.map((item) => [item.id, item]));
+      for (const item of restored) byId.set(item.id, item);
+      return [...byId.values()].sort(
+        (a, b) =>
+          new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
+      );
+    });
+  }, [remoteTurns]);
 
   // Keep sessionStorage in sync for sessionId
   useEffect(() => {
