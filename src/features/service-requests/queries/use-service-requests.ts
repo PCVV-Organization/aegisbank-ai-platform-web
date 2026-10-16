@@ -11,7 +11,7 @@ import type {
 
 export function useServiceRequests() {
   const { user } = useAuth();
-  const customerId = user?.id || "CUST-0001";
+  const customerId = user?.id || "anonymous";
   const queryClient = useQueryClient();
   const queryKey = ["service-requests", customerId];
 
@@ -20,27 +20,36 @@ export function useServiceRequests() {
     queryFn: async (): Promise<ServiceRequestItem[]> => {
       return await fetchCustomerServiceRequests();
     },
+    // Service-request state is customer-visible banking data: never trust a
+    // time-based cache as the current source of truth.
+    staleTime: 0,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
   });
 
   const mutation = useMutation({
     mutationFn: async (
       payload: ServiceRequestCreatePayload,
     ): Promise<ServiceRequestItem> => {
-      return await createCustomerServiceRequest(payload, customerId);
+      return await createCustomerServiceRequest(payload);
     },
-    onSuccess: (newRecord) => {
+    onSuccess: async (newRecord) => {
       queryClient.setQueryData<ServiceRequestItem[]>(queryKey, (old) => {
         const existing = old || [];
         const filtered = existing.filter((item) => item.id !== newRecord.id);
         return [newRecord, ...filtered];
       });
-      void queryClient.invalidateQueries({ queryKey });
+      // A successful Core Banking write invalidates the list and waits for a
+      // fresh server response. Failed writes leave the previous cache intact.
+      await queryClient.invalidateQueries({ queryKey, refetchType: "active" });
     },
   });
 
   return {
     requests: query.data || [],
     isLoading: query.isLoading,
+    isRefreshing: query.isFetching && !query.isLoading,
     isError: query.isError,
     error: query.error,
     refetch: query.refetch,
