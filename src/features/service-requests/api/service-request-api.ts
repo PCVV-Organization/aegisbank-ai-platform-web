@@ -21,10 +21,17 @@ export function mapBackendItemToDomain(
 export async function fetchCustomerServiceRequests(): Promise<
   ServiceRequestItem[]
 > {
-  const response = await apiFetch<BackendServiceRequestListResponse>(
-    "/api/v1/me/service-requests",
-  );
-  return response.items.map(mapBackendItemToDomain);
+  const response = await apiFetch<
+    BackendServiceRequestListResponse | BackendServiceRequestItem[]
+  >("/api/v1/me/service-requests");
+
+  if (response && "items" in response && Array.isArray(response.items)) {
+    return response.items.map(mapBackendItemToDomain);
+  }
+  if (Array.isArray(response)) {
+    return response.map(mapBackendItemToDomain);
+  }
+  return [];
 }
 
 export async function createCustomerServiceRequest(
