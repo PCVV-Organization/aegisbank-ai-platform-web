@@ -101,15 +101,25 @@ state.signIn = async (dni?: string, password?: string) => {
 };
 state.signOut = async () => {
   if (authMode === "synthetic-password" && state.user) {
-    await fetch(`${apiBase}/api/v1/auth/logout`, {
-      method: "POST",
-      credentials: "include",
-      headers: { "X-CSRF-Token": syntheticCsrfToken ?? csrfToken() ?? "" },
-    });
+    const logoutRequest = (csrf: string | null) =>
+      fetch(`${apiBase}/api/v1/auth/logout`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "X-CSRF-Token": csrf ?? "" },
+      });
+    let response = await logoutRequest(await ensureCsrfToken());
+    if (response.status === 403) {
+      // Recover from a rotated/stale double-submit token, then retry once.
+      setCsrfToken(null);
+      response = await logoutRequest(await ensureCsrfToken());
+    }
     syntheticToken = null;
     setCsrfToken(null);
     state = { ...state, user: null };
     notify();
+    if (!response.ok && response.status !== 401) {
+      throw new Error("No se pudo cerrar la sesión remota");
+    }
     return;
   }
   if (useMockAuth || !msal) {
