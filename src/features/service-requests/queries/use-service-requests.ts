@@ -20,11 +20,12 @@ export function useServiceRequests() {
     queryFn: async (): Promise<ServiceRequestItem[]> => {
       return await fetchCustomerServiceRequests();
     },
-    // Service-request state is customer-visible banking data: never trust a
-    // time-based cache as the current source of truth.
-    staleTime: 0,
-    refetchOnMount: "always",
-    refetchOnWindowFocus: true,
+    // Keep a very short, customer-scoped cache to reduce duplicate reads in
+    // Azure while ensuring the list is refreshed when it becomes stale.
+    staleTime: 15_000,
+    gcTime: 5 * 60_000,
+    refetchOnMount: true,
+    refetchOnWindowFocus: false,
     refetchOnReconnect: true,
   });
 
