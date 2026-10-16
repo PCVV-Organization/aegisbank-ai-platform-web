@@ -24,10 +24,12 @@ export function AssistantPage() {
         {run.isPending ? (
           <div className="flex min-h-52 flex-col items-center justify-center gap-3 text-center">
             <span
-              className="h-8 w-8 animate-spin rounded-full border-4 border-slate-200 border-t-blue-600"
+              className="h-8 w-8 animate-spin rounded-full border-4 border-slate-200 border-t-blue-600 motion-reduce:animate-none"
               aria-hidden="true"
             />
-            <p className="font-medium text-slate-900">Consultando AegisBank…</p>
+            <p className="font-medium text-slate-900" role="status">
+              Consultando AegisBank…
+            </p>
             <p className="text-sm text-slate-500">
               Estamos verificando tu información bancaria.
             </p>
