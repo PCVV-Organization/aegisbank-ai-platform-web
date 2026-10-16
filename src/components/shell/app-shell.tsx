@@ -26,12 +26,7 @@ import {
   MenuIcon,
   CloseIcon,
 } from "../icons";
-import {
-  THEME_OPTIONS,
-  type ThemePalette,
-  applyTheme,
-  getActiveTheme,
-} from "../../design-system/theme";
+import { initTheme } from "../../design-system/theme";
 
 export const NAV_ITEMS = [
   { id: "overview", label: "Overview", icon: OverviewIcon },
@@ -51,17 +46,10 @@ export function AppShell() {
   const { user, signOut } = useAuth();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
-  const [currentTheme, setCurrentTheme] =
-    useState<ThemePalette>(getActiveTheme);
 
   useEffect(() => {
-    applyTheme(currentTheme);
-  }, [currentTheme]);
-
-  const handleThemeChange = (newTheme: ThemePalette) => {
-    setCurrentTheme(newTheme);
-    applyTheme(newTheme);
-  };
+    initTheme();
+  }, []);
 
   return (
     <TooltipProvider delayDuration={150}>
@@ -311,36 +299,6 @@ export function AppShell() {
             </div>
 
             <div className="flex items-center gap-3">
-              {/* Palette & Theme Customizer Swatches */}
-              <div
-                className="hidden items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 p-1 sm:flex"
-                title="Personalizar paleta de colores"
-              >
-                {THEME_OPTIONS.map((t) => (
-                  <Tooltip key={t.id}>
-                    <TooltipTrigger asChild>
-                      <button
-                        type="button"
-                        onClick={() => handleThemeChange(t.id)}
-                        aria-label={`Cambiar a paleta ${t.name}`}
-                        className={`h-5 w-5 rounded-full transition-transform hover:scale-110 focus-visible:ring-2 focus-visible:ring-blue-500 ${
-                          currentTheme === t.id
-                            ? "ring-2 ring-blue-500 ring-offset-1 scale-105"
-                            : "opacity-70 hover:opacity-100"
-                        }`}
-                        style={{ backgroundColor: t.previewColor }}
-                      />
-                    </TooltipTrigger>
-                    <TooltipContent side="bottom">
-                      <p className="font-semibold">{t.name}</p>
-                      <p className="text-[10px] text-slate-300">
-                        {t.description}
-                      </p>
-                    </TooltipContent>
-                  </Tooltip>
-                ))}
-              </div>
-
               {/* Security Pill */}
               <Badge variant="success" className="hidden py-1 lg:inline-flex">
                 <LockIcon className="h-3.5 w-3.5 text-emerald-700" />
