@@ -36,14 +36,23 @@ export function useServiceRequests() {
       return await createCustomerServiceRequest(payload);
     },
     onSuccess: async (newRecord) => {
+      // 1. Immediately inject the newly created record into the local query cache for instant feedback
       queryClient.setQueryData<ServiceRequestItem[]>(queryKey, (old) => {
         const existing = old || [];
         const filtered = existing.filter((item) => item.id !== newRecord.id);
         return [newRecord, ...filtered];
       });
-      // A successful Core Banking write invalidates the list and waits for a
-      // fresh server response. Failed writes leave the previous cache intact.
-      await queryClient.invalidateQueries({ queryKey, refetchType: "active" });
+      // 2. Invalidate and purge the query cache for all customer service request lists
+      // to guarantee authoritative data synchronization from Core Banking.
+      await queryClient.invalidateQueries({
+        queryKey: ["service-requests"],
+        exact: false,
+        refetchType: "all",
+      });
+      await queryClient.refetchQueries({
+        queryKey: ["service-requests"],
+        exact: false,
+      });
     },
   });
 
