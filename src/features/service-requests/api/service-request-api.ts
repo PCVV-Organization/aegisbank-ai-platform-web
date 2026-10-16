@@ -36,10 +36,8 @@ export async function fetchCustomerServiceRequests(): Promise<
 
 export async function createCustomerServiceRequest(
   payload: ServiceRequestCreatePayload,
-  customerId: string = "CUST-0001",
 ): Promise<ServiceRequestItem> {
   const body = {
-    customer_id: payload.customerId || customerId,
     category: payload.category,
     description: payload.summary,
   };

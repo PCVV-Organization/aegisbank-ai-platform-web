@@ -68,6 +68,7 @@ export function ServiceRequestForm() {
   const {
     requests,
     isLoading,
+    isRefreshing,
     isError,
     error,
     refetch,
@@ -425,6 +426,15 @@ export function ServiceRequestForm() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
+              {isRefreshing && requests.length > 0 ? (
+                <div
+                  className="flex items-center gap-2 rounded-lg border border-slate-200/80 bg-slate-50 px-3 py-1.5 text-xs text-slate-600 animate-pulse"
+                  aria-live="polite"
+                >
+                  <span className="inline-block h-2 w-2 rounded-full bg-emerald-500" />
+                  <span>Sincronizando con Core Banking en tiempo real…</span>
+                </div>
+              ) : null}
               {isLoading ? (
                 <div
                   className="space-y-3"
