@@ -10,6 +10,9 @@ interface PersistedConversationTurn {
   timestamp: string;
   metadata?: {
     execution_mode?: ChatMessage["executionMode"];
+    rounds?: number;
+    tool_count?: number;
+    latency_ms?: number;
   };
 }
 
@@ -24,6 +27,12 @@ const QUICK_SUGGESTIONS = [
 function formatTime(isoString?: string): string {
   const date = isoString ? new Date(isoString) : new Date();
   return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+}
+
+function formatLatency(ms?: number): string {
+  if (ms === undefined || ms === null) return "";
+  if (ms < 1000) return `${Math.round(ms)} ms`;
+  return `${(ms / 1000).toFixed(1)} s`;
 }
 
 function sanitizeRestoredMessage(message: ChatMessage): ChatMessage {
@@ -74,6 +83,19 @@ export function AssistantPage() {
   const transcriptRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const run = useAssistantRun();
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  const handleCopy = async (id: string, text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedId(id);
+      setTimeout(() => {
+        setCopiedId((current) => (current === id ? null : current));
+      }, 2000);
+    } catch {
+      // Fallback in environments without clipboard permissions
+    }
+  };
 
   // Keep sessionStorage in sync whenever messages change
   useEffect(() => {
@@ -101,6 +123,15 @@ export function AssistantPage() {
             timestamp: turn.timestamp,
             ...(turn.metadata?.execution_mode
               ? { executionMode: turn.metadata.execution_mode }
+              : {}),
+            ...(typeof turn.metadata?.latency_ms === "number"
+              ? { latencyMs: turn.metadata.latency_ms }
+              : {}),
+            ...(typeof turn.metadata?.tool_count === "number"
+              ? { toolCount: turn.metadata.tool_count }
+              : {}),
+            ...(typeof turn.metadata?.rounds === "number"
+              ? { rounds: turn.metadata.rounds }
               : {}),
           }),
         );
@@ -180,6 +211,9 @@ export function AssistantPage() {
             content: data.answer,
             timestamp: new Date().toISOString(),
             executionMode: data.execution_mode,
+            latencyMs: data.latency_ms,
+            toolCount: data.tool_count,
+            rounds: data.rounds,
           };
           setMessages((prev) => [...prev, assistantMsg]);
         },
@@ -367,23 +401,111 @@ export function AssistantPage() {
                     <p className="whitespace-pre-wrap">
                       {sanitizeRestoredMessage(item).content}
                     </p>
-                    {item.role === "assistant" && item.executionMode ? (
-                      <span className="mt-2 block text-[10px] font-medium uppercase tracking-wide opacity-70">
-                        {item.executionMode === "azure-foundry"
-                          ? "Azure AI Foundry"
-                          : item.executionMode === "cloud-fallback"
-                            ? "Fallback cloud"
-                            : "Consulta estructurada"}
-                      </span>
+
+                    {item.role === "assistant" &&
+                    (item.executionMode || item.latencyMs !== undefined) ? (
+                      <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-slate-200/70 pt-2 text-xs">
+                        {item.executionMode === "azure-foundry" ? (
+                          <span className="inline-flex items-center gap-1 rounded-md border border-blue-200 bg-blue-50 px-2 py-0.5 text-[11px] font-semibold text-blue-800">
+                            <span
+                              className="h-1.5 w-1.5 rounded-full bg-blue-600 animate-pulse motion-reduce:animate-none"
+                              aria-hidden="true"
+                            />
+                            Azure AI Foundry
+                          </span>
+                        ) : item.executionMode === "cloud-fallback" ? (
+                          <span className="inline-flex items-center gap-1 rounded-md border border-amber-200 bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-800">
+                            Fallback local
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 rounded-md border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-800">
+                            Consulta estructurada
+                          </span>
+                        )}
+
+                        {item.latencyMs !== undefined ? (
+                          <span className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-600">
+                            <span aria-hidden="true">⚡</span>
+                            {formatLatency(item.latencyMs)}
+                          </span>
+                        ) : null}
+
+                        {item.toolCount !== undefined ? (
+                          <span className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-600">
+                            <span aria-hidden="true">🛠️</span>
+                            {item.toolCount}{" "}
+                            {item.toolCount === 1
+                              ? "herramienta"
+                              : "herramientas"}
+                          </span>
+                        ) : null}
+                      </div>
                     ) : null}
                   </div>
-                  <span
-                    className={`mt-1 text-[10px] text-slate-400 ${
-                      item.role === "user" ? "text-right" : "text-left"
-                    }`}
-                  >
-                    {formatTime(item.timestamp)}
-                  </span>
+
+                  <div className="mt-1 flex items-center justify-between gap-2 px-1">
+                    <span
+                      className={`text-[11px] text-slate-500 ${
+                        item.role === "user" ? "w-full text-right" : "text-left"
+                      }`}
+                    >
+                      {formatTime(item.timestamp)}
+                    </span>
+
+                    {item.role === "assistant" ? (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          handleCopy(
+                            item.id,
+                            sanitizeRestoredMessage(item).content,
+                          )
+                        }
+                        className="group inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] font-medium text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-800 focus-visible:ring-1 focus-visible:ring-blue-600 active:scale-95 motion-reduce:transform-none"
+                        aria-label="Copiar respuesta al portapapeles"
+                      >
+                        {copiedId === item.id ? (
+                          <>
+                            <svg
+                              className="h-3 w-3 text-emerald-600 transition-transform duration-200"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                              strokeWidth="2.5"
+                              aria-hidden="true"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M5 13l4 4L19 7"
+                              />
+                            </svg>
+                            <span className="font-semibold text-emerald-700">
+                              Copiado
+                            </span>
+                          </>
+                        ) : (
+                          <>
+                            <svg
+                              className="h-3 w-3 text-slate-400 transition-colors group-hover:text-slate-600"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              aria-hidden="true"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                              />
+                            </svg>
+                            <span>Copiar</span>
+                          </>
+                        )}
+                      </button>
+                    ) : null}
+                  </div>
                 </div>
               </div>
             </div>

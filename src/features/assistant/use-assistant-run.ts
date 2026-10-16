@@ -6,7 +6,14 @@ export interface ChatMessage {
   role: "user" | "assistant";
   content: string;
   timestamp: string;
-  executionMode?: "azure-foundry" | "deterministic" | "cloud-fallback";
+  executionMode?:
+    | "azure-foundry"
+    | "deterministic"
+    | "cloud-fallback"
+    | undefined;
+  latencyMs?: number | undefined;
+  toolCount?: number | undefined;
+  rounds?: number | undefined;
 }
 
 export interface AssistantRunResponse {
@@ -15,6 +22,8 @@ export interface AssistantRunResponse {
   customer_id?: string;
   rounds?: number;
   execution_mode: "azure-foundry" | "deterministic" | "cloud-fallback";
+  latency_ms?: number;
+  tool_count?: number;
 }
 
 export function useAssistantRun() {
