@@ -33,6 +33,10 @@ let state: AuthState = {
   signOut: async () => undefined,
 };
 let syntheticToken: string | null = null;
+// The API session cookie is HttpOnly and lives on another origin, so the
+// browser cannot read the readable CSRF cookie with document.cookie. Keep the
+// nonce returned by login in memory and send it as the double-submit header.
+let syntheticCsrfToken: string | null = null;
 const apiBase = import.meta.env.VITE_API_BASE_URL ?? "";
 const listeners = new Set<() => void>();
 const notify = () => listeners.forEach((listener) => listener());
@@ -58,8 +62,10 @@ state.signIn = async (dni?: string, password?: string) => {
     if (!response.ok) throw new Error("DNI o contraseña no válidos");
     const result = (await response.json()) as {
       customer_id: string;
+      csrf_token?: string;
     };
     syntheticToken = null;
+    syntheticCsrfToken = result.csrf_token ?? null;
     state = {
       ...state,
       user: { id: result.customer_id, name: `Customer ${result.customer_id}` },
@@ -77,13 +83,14 @@ state.signIn = async (dni?: string, password?: string) => {
   await msal.loginRedirect({ scopes: ["openid", "profile", apiScope] });
 };
 state.signOut = async () => {
-  if (authMode === "synthetic-password" && syntheticToken) {
+  if (authMode === "synthetic-password" && state.user) {
     await fetch(`${apiBase}/api/v1/auth/logout`, {
       method: "POST",
       credentials: "include",
-      headers: { "X-CSRF-Token": csrfToken() ?? "" },
+      headers: { "X-CSRF-Token": syntheticCsrfToken ?? csrfToken() ?? "" },
     });
     syntheticToken = null;
+    syntheticCsrfToken = null;
     state = { ...state, user: null };
     notify();
     return;
@@ -140,6 +147,7 @@ function csrfToken(): string | null {
   const match = document.cookie.match(/(?:^|; )aegisbank_csrf=([^;]*)/);
   return match?.[1] ? decodeURIComponent(match[1]) : null;
 }
+export const getCsrfToken = () => syntheticCsrfToken ?? csrfToken();
 export const useAuth = Object.assign(
   function useAuthHook() {
     return useSyncExternalStore(
