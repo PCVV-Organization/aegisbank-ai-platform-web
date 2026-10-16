@@ -1,0 +1,21 @@
+feat(ui): redesign assistant as banking conversation
+
+Purpose
+Replace the sparse assistant screen with a clear, responsive banking support workspace that makes conversation state and security cues easy to understand.
+
+Changes
+- add banking-specific header, protected-session indicator, and support context
+- add suggested bilingual questions and a stronger empty state
+- improve transcript bubbles, scrolling, input hierarchy, and privacy guidance
+- preserve the real API session and conversation history behavior
+
+Validation
+- pnpm format:check: PASS
+- pnpm lint: PASS
+- pnpm typecheck: PASS
+- pnpm test -- --run: PASS (7 tests)
+- pnpm build: PASS
+- git diff --check: PASS
+
+Remaining limits
+- The remaining portal modules are still contract placeholders until their backend endpoints are connected.
