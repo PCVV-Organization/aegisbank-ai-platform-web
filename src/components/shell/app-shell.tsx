@@ -27,6 +27,7 @@ import {
   CloseIcon,
 } from "../icons";
 import { initTheme } from "../../design-system/theme";
+import { SessionTimeoutModal } from "../auth/session-timeout-modal";
 
 export const NAV_ITEMS = [
   { id: "overview", label: "Overview", icon: OverviewIcon },
@@ -365,6 +366,8 @@ export function AppShell() {
           </div>
         </main>
       </div>
+
+      <SessionTimeoutModal />
     </TooltipProvider>
   );
 }
