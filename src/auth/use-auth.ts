@@ -51,15 +51,15 @@ state.signIn = async (dni?: string, password?: string) => {
     if (!dni || !password) throw new Error("DNI y contraseña son obligatorios");
     const response = await fetch(`${apiBase}/api/v1/auth/login`, {
       method: "POST",
+      credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ dni, password }),
     });
     if (!response.ok) throw new Error("DNI o contraseña no válidos");
     const result = (await response.json()) as {
-      access_token: string;
       customer_id: string;
     };
-    syntheticToken = result.access_token;
+    syntheticToken = null;
     state = {
       ...state,
       user: { id: result.customer_id, name: `Customer ${result.customer_id}` },
@@ -80,7 +80,8 @@ state.signOut = async () => {
   if (authMode === "synthetic-password" && syntheticToken) {
     await fetch(`${apiBase}/api/v1/auth/logout`, {
       method: "POST",
-      headers: { Authorization: `Bearer ${syntheticToken}` },
+      credentials: "include",
+      headers: { "X-CSRF-Token": csrfToken() ?? "" },
     });
     syntheticToken = null;
     state = { ...state, user: null };
@@ -108,10 +109,36 @@ export const getAccessToken = async (): Promise<string | null> => {
   return response.accessToken;
 };
 export async function initializeAuth() {
+  if (authMode === "synthetic-password" && apiBase) {
+    try {
+      const response = await fetch(`${apiBase}/api/v1/auth/me`, {
+        credentials: "include",
+      });
+      if (response.ok) {
+        const result = (await response.json()) as { customer_id: string };
+        state = {
+          ...state,
+          user: {
+            id: result.customer_id,
+            name: `Customer ${result.customer_id}`,
+          },
+        };
+        notify();
+      }
+    } catch {
+      // A missing session is expected before the first login.
+    }
+    return;
+  }
   if (useMockAuth || !msal) return;
   await msal.initialize();
   const redirect = await msal.handleRedirectPromise();
   setAccount(redirect?.account ?? msal.getAllAccounts()[0] ?? null);
+}
+
+function csrfToken(): string | null {
+  const match = document.cookie.match(/(?:^|; )aegisbank_csrf=([^;]*)/);
+  return match?.[1] ? decodeURIComponent(match[1]) : null;
 }
 export const useAuth = Object.assign(
   function useAuthHook() {
