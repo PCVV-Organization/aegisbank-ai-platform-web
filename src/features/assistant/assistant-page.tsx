@@ -155,7 +155,7 @@ export function AssistantPage() {
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-lg font-bold text-slate-900 sm:text-xl">
-                Aegis Assistant
+                Aegis assistant
               </h1>
               <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-semibold text-blue-800">
                 AI Banking
@@ -366,7 +366,7 @@ export function AssistantPage() {
         >
           <div className="relative flex items-center">
             <label htmlFor="assistant-message" className="sr-only">
-              Escribe tu consulta
+              Message
             </label>
             <input
               ref={inputRef}
@@ -375,16 +375,16 @@ export function AssistantPage() {
               className="h-12 w-full rounded-xl border border-slate-300 bg-slate-50/50 pl-4 pr-24 text-sm text-slate-900 shadow-inner transition placeholder:text-slate-400 focus:border-blue-600 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-100 disabled:cursor-not-allowed disabled:opacity-60"
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              placeholder="Escribe tu consulta (ej. ¿cuál es mi saldo actual?)"
+              placeholder="Ask in English or Spanish (e.g. what is my balance?)"
               disabled={run.isPending}
             />
             <button
               type="submit"
               disabled={!message.trim() || run.isPending}
               className="absolute right-1.5 flex h-9 items-center gap-1.5 rounded-lg bg-[#0f2747] px-3.5 text-xs font-semibold text-white transition hover:bg-[#173b6c] focus-visible:ring-2 focus-visible:ring-blue-600 disabled:cursor-not-allowed disabled:opacity-40"
-              aria-label="Enviar mensaje"
+              aria-label="Send"
             >
-              <span>Enviar</span>
+              <span>Send</span>
               <svg
                 className="h-3.5 w-3.5"
                 fill="none"
