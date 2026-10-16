@@ -65,8 +65,15 @@ function formatDate(isoString: string): string {
 }
 
 export function ServiceRequestForm() {
-  const { requests, isLoading, createRequest, isCreating, error } =
-    useServiceRequests();
+  const {
+    requests,
+    isLoading,
+    isError,
+    error,
+    refetch,
+    createRequest,
+    isCreating,
+  } = useServiceRequests();
 
   const [submittedTicket, setSubmittedTicket] =
     useState<ServiceRequestItem | null>(null);
@@ -114,16 +121,16 @@ export function ServiceRequestForm() {
   });
 
   return (
-    <div className="mx-auto max-w-4xl space-y-8">
+    <div className="mx-auto w-full max-w-6xl min-w-0 space-y-6 px-1 sm:space-y-8">
       {/* Success Receipt Banner when a request is registered */}
       {submittedTicket ? (
         <div
           role="status"
           aria-live="polite"
-          className="rounded-2xl border border-emerald-200 bg-emerald-50/90 p-5 shadow-sm transition-all"
+          className="rounded-2xl border border-emerald-200 bg-emerald-50/90 p-4 shadow-sm transition-all sm:p-5"
         >
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-            <div className="flex items-start gap-3.5">
+          <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div className="flex min-w-0 items-start gap-3.5">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-600 text-white shadow-xs">
                 <svg
                   className="h-5 w-5"
@@ -140,27 +147,28 @@ export function ServiceRequestForm() {
                   />
                 </svg>
               </div>
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <h3 className="text-sm font-semibold text-emerald-950">
+              <div className="min-w-0 space-y-1">
+                <div className="flex min-w-0 flex-wrap items-center gap-2">
+                  <h3 className="min-w-0 text-sm font-semibold leading-5 text-emerald-950">
                     Solicitud radicada con éxito
                   </h3>
                   <Badge variant="outline" className="font-mono text-xs">
                     {submittedTicket.id}
                   </Badge>
                 </div>
-                <p className="text-xs text-emerald-800 leading-relaxed">
+                <p className="text-xs leading-5 text-emerald-800">
                   Tu requerimiento ha sido registrado en el sistema bajo
                   supervisión bancaria auditada. Puedes consultar su estado en
                   cualquier momento con nuestro Asistente de IA.
                 </p>
-                <div className="pt-1 text-[11px] font-medium text-emerald-700">
-                  Resumen: &ldquo;{submittedTicket.summary}&rdquo;
+                <div className="break-words whitespace-pre-wrap pt-1 text-[11px] font-medium leading-5 text-emerald-700">
+                  <span className="font-semibold">Resumen:</span>{" "}
+                  <q>{submittedTicket.summary}</q>
                 </div>
               </div>
             </div>
 
-            <div className="flex items-center gap-2 self-end sm:self-center">
+            <div className="flex flex-wrap items-center gap-2 self-start sm:self-center">
               <Button
                 variant="outline"
                 size="sm"
@@ -201,9 +209,9 @@ export function ServiceRequestForm() {
       ) : null}
 
       {/* Main Grid: Form on Left, History on Right */}
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
+      <div className="grid min-w-0 grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.15fr)_minmax(18rem,0.85fr)] lg:gap-8">
         {/* Creation Form Column */}
-        <div className="lg:col-span-7">
+        <div className="min-w-0">
           <Card className="shadow-sm">
             <CardHeader className="pb-4">
               <CardTitle className="text-lg sm:text-xl">
@@ -214,11 +222,11 @@ export function ServiceRequestForm() {
                 AegisBank.
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="min-w-0">
               {submissionError ? (
                 <div
                   role="alert"
-                  className="mb-4 rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs text-rose-800"
+                  className="mb-4 break-words rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs leading-5 text-rose-800"
                 >
                   {submissionError}
                 </div>
@@ -230,7 +238,7 @@ export function ServiceRequestForm() {
                   e.stopPropagation();
                   void form.handleSubmit();
                 }}
-                className="space-y-4"
+                className="min-w-0 space-y-5"
               >
                 {/* Category Selector */}
                 <form.Field
@@ -262,7 +270,7 @@ export function ServiceRequestForm() {
                             e.target.value as ServiceRequestCategory,
                           )
                         }
-                        className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 shadow-xs transition-colors focus:border-blue-600 focus:outline-hidden focus:ring-2 focus:ring-blue-600/20"
+                        className="min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm leading-5 text-slate-900 shadow-xs transition-colors focus:border-blue-600 focus:outline-hidden focus:ring-2 focus:ring-blue-600/20"
                       >
                         {CATEGORY_OPTIONS.map((opt) => (
                           <option key={opt.value} value={opt.value}>
@@ -312,7 +320,7 @@ export function ServiceRequestForm() {
                           >
                             Resumen detallado
                           </label>
-                          <span className="text-[11px] text-slate-600">
+                          <span className="shrink-0 text-[11px] tabular-nums text-slate-600">
                             {field.state.value.length}/240
                           </span>
                         </div>
@@ -328,7 +336,7 @@ export function ServiceRequestForm() {
                             hasError ? `${field.name}-error` : undefined
                           }
                           placeholder="Describe detalladamente el requerimiento, cuota, préstamo o consulta..."
-                          className="w-full resize-none rounded-xl border border-slate-300 bg-white p-3 text-sm text-slate-900 shadow-xs placeholder:text-slate-600 transition-colors focus:border-blue-600 focus:outline-hidden focus:ring-2 focus:ring-blue-600/20"
+                          className="min-h-32 w-full resize-y rounded-xl border border-slate-300 bg-white p-3 text-sm leading-6 text-slate-900 shadow-xs placeholder:text-slate-600 transition-colors focus:border-blue-600 focus:outline-hidden focus:ring-2 focus:ring-blue-600/20"
                         />
                         {hasError && errorMsg ? (
                           <p
@@ -369,8 +377,8 @@ export function ServiceRequestForm() {
                   )}
                 </form.Subscribe>
 
-                <div className="rounded-xl border border-slate-200/80 bg-slate-50 p-3 text-xs text-slate-600">
-                  <div className="flex items-center gap-1.5 font-semibold text-slate-800">
+                <div className="rounded-xl border border-slate-200/80 bg-slate-50 p-3 text-xs leading-5 text-slate-600">
+                  <div className="flex items-start gap-1.5 font-semibold text-slate-800">
                     <svg
                       className="h-4 w-4 text-blue-600"
                       fill="none"
@@ -399,14 +407,14 @@ export function ServiceRequestForm() {
         </div>
 
         {/* Existing Requests Feed Column */}
-        <div className="lg:col-span-5">
+        <div className="min-w-0">
           <Card className="shadow-sm">
             <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-base sm:text-lg">
+              <div className="flex min-w-0 flex-wrap items-start justify-between gap-3">
+                <CardTitle className="min-w-0 text-base leading-6 sm:text-lg">
                   Tus solicitudes registradas
                 </CardTitle>
-                <Badge variant="outline" className="font-mono">
+                <Badge variant="outline" className="shrink-0 font-mono">
                   {isLoading
                     ? "..."
                     : `${requests.length} activa${requests.length === 1 ? "" : "s"}`}
@@ -440,18 +448,41 @@ export function ServiceRequestForm() {
                     </div>
                   ))}
                 </div>
+              ) : isError ? (
+                <div
+                  role="alert"
+                  className="space-y-3 rounded-xl border border-rose-200 bg-rose-50/80 p-4 text-center text-xs text-rose-800"
+                >
+                  <p className="font-semibold">
+                    No se pudo cargar el historial desde Core Banking.
+                  </p>
+                  <p className="text-[11px] text-rose-600 leading-relaxed">
+                    {error instanceof Error
+                      ? error.message
+                      : "Verifica la conexión con el servicio bancario o reintenta."}
+                  </p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => void refetch()}
+                    className="border-rose-300 bg-white text-rose-800 hover:bg-rose-100"
+                  >
+                    Reintentar
+                  </Button>
+                </div>
               ) : requests.length === 0 ? (
                 <div className="py-8 text-center text-sm text-slate-500">
-                  No tienes solicitudes registradas.
+                  No tienes solicitudes registradas en Core Banking.
                 </div>
               ) : (
                 requests.map((item) => (
                   <div
                     key={item.id}
-                    className="flex flex-col gap-1.5 rounded-xl border border-slate-200/80 bg-slate-50/60 p-3.5 transition-all hover:border-slate-300 hover:bg-slate-50 hover:shadow-2xs"
+                    className="flex min-w-0 flex-col gap-2 rounded-xl border border-slate-200/80 bg-slate-50/60 p-3.5 transition-all hover:border-slate-300 hover:bg-slate-50 hover:shadow-2xs"
                   >
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="font-mono text-xs font-bold text-slate-900">
+                    <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
+                      <span className="min-w-0 break-all font-mono text-xs font-bold text-slate-900">
                         {item.id}
                       </span>
                       <Badge
@@ -462,7 +493,7 @@ export function ServiceRequestForm() {
                               ? "warning"
                               : "success"
                         }
-                        className="text-[10px]"
+                        className="shrink-0 text-[10px]"
                       >
                         {item.status === "OPEN"
                           ? "Abierta"
@@ -471,25 +502,24 @@ export function ServiceRequestForm() {
                             : "Resuelta"}
                       </Badge>
                     </div>
-                    <p className="text-xs font-medium text-slate-800 line-clamp-2">
+                    <p className="break-words whitespace-pre-wrap text-xs font-medium leading-5 text-slate-800">
                       {item.summary}
                     </p>
-                    <div className="mt-1 flex items-center justify-between text-[11px] text-slate-500">
-                      <span className="rounded bg-slate-200/70 px-1.5 py-0.5 font-medium text-slate-700">
+                    <div className="mt-1 flex min-w-0 flex-wrap items-start gap-2 text-[11px] leading-4 text-slate-500">
+                      <span className="max-w-full break-words rounded bg-slate-200/70 px-1.5 py-0.5 font-medium text-slate-700">
                         {CATEGORY_OPTIONS.find((c) => c.value === item.category)
                           ?.label || item.category}
                       </span>
-                      <span>{formatDate(item.createdAt)}</span>
+                      <time
+                        className="break-words pt-0.5"
+                        dateTime={item.createdAt}
+                      >
+                        {formatDate(item.createdAt)}
+                      </time>
                     </div>
                   </div>
                 ))
               )}
-
-              {error ? (
-                <div className="pt-2 text-center text-xs text-amber-700">
-                  Mostrando registros sincronizados en tu sesión local.
-                </div>
-              ) : null}
             </CardContent>
           </Card>
         </div>

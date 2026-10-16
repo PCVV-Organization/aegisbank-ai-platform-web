@@ -1,4 +1,7 @@
-export { fetchCustomerServiceRequests } from "./api/service-request-api";
+export {
+  createCustomerServiceRequest,
+  fetchCustomerServiceRequests,
+} from "./api/service-request-api";
 export type {
   BackendServiceRequestItem,
   BackendServiceRequestListResponse,
