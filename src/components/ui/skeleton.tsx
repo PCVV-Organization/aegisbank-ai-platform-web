@@ -1,12 +1,15 @@
 import * as React from "react";
+import { Slot } from "@radix-ui/react-slot";
 import { cn } from "../../lib/utils";
 
-function Skeleton({
-  className,
-  ...props
-}: React.HTMLAttributes<HTMLDivElement>) {
+export interface SkeletonProps extends React.HTMLAttributes<HTMLDivElement> {
+  asChild?: boolean;
+}
+
+function Skeleton({ className, asChild = false, ...props }: SkeletonProps) {
+  const Comp = asChild ? Slot : "div";
   return (
-    <div
+    <Comp
       aria-hidden="true"
       className={cn(
         "animate-shimmer rounded-lg bg-slate-200/80 motion-reduce:animate-none",
