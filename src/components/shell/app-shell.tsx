@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, Outlet } from "@tanstack/react-router";
 import { useAuth } from "../../auth/use-auth";
 import { Button } from "../ui/button";
@@ -26,6 +26,12 @@ import {
   MenuIcon,
   CloseIcon,
 } from "../icons";
+import {
+  THEME_OPTIONS,
+  type ThemePalette,
+  applyTheme,
+  getActiveTheme,
+} from "../../design-system/theme";
 
 export const NAV_ITEMS = [
   { id: "overview", label: "Overview", icon: OverviewIcon },
@@ -45,6 +51,17 @@ export function AppShell() {
   const { user, signOut } = useAuth();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
+  const [currentTheme, setCurrentTheme] =
+    useState<ThemePalette>(getActiveTheme);
+
+  useEffect(() => {
+    applyTheme(currentTheme);
+  }, [currentTheme]);
+
+  const handleThemeChange = (newTheme: ThemePalette) => {
+    setCurrentTheme(newTheme);
+    applyTheme(newTheme);
+  };
 
   return (
     <TooltipProvider delayDuration={150}>
@@ -61,18 +78,19 @@ export function AppShell() {
         />
       )}
 
-      <div className="min-h-screen bg-slate-50 md:flex">
-        {/* Sidebar Dock */}
+      {/* Fixed Full-Height Viewport Container */}
+      <div className="flex h-screen h-[100dvh] w-full overflow-hidden bg-slate-50">
+        {/* Fixed Left Sidebar Dock */}
         <aside
-          className={`fixed inset-y-0 left-0 z-50 flex flex-col bg-[#0f2747] text-white transition-all duration-300 ease-in-out md:static md:min-h-screen md:shrink-0 ${
+          className={`fixed inset-y-0 left-0 z-50 flex h-full flex-col bg-[var(--sidebar-bg)] text-white transition-all duration-300 ease-in-out md:static md:h-screen md:h-[100dvh] md:shrink-0 ${
             mobileNavOpen
               ? "translate-x-0 shadow-2xl"
               : "-translate-x-full md:translate-x-0"
-          } ${collapsed ? "w-64 md:w-20 p-3 md:p-3" : "w-64 p-4 md:p-5"}`}
+          } ${collapsed ? "w-64 md:w-20 p-3" : "w-64 p-4 md:p-5"}`}
         >
           {/* Sidebar Header: Brand & Collapse Toggle */}
           <div
-            className={`mb-6 flex items-center border-b border-white/10 pb-4 ${
+            className={`shrink-0 mb-4 flex items-center border-b border-white/10 pb-4 ${
               collapsed
                 ? "md:flex-col md:items-center md:gap-3"
                 : "justify-between"
@@ -98,7 +116,7 @@ export function AppShell() {
               )}
             </div>
 
-            {/* Desktop Collapse / Expand Toggle Button inside the Sidebar */}
+            {/* Desktop Collapse / Expand Toggle Button */}
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
@@ -138,10 +156,10 @@ export function AppShell() {
             </Button>
           </div>
 
-          {/* Navigation Links */}
+          {/* Navigation Links: Independently Scrollable Flex Area */}
           <nav
             aria-label="Primary navigation"
-            className="flex-1 space-y-1.5 overflow-y-auto"
+            className="flex-1 min-h-0 space-y-1.5 overflow-y-auto overflow-x-hidden py-1"
           >
             {NAV_ITEMS.map((item) => {
               const Icon = item.icon;
@@ -153,7 +171,7 @@ export function AppShell() {
                   aria-label={item.label}
                   activeProps={{
                     className:
-                      "bg-blue-600/30 text-white font-medium border-l-2 border-blue-400 shadow-sm",
+                      "bg-[var(--sidebar-active)] text-white font-medium border-l-2 border-[var(--sidebar-active-border)] shadow-xs",
                   }}
                   className={`group flex min-h-11 items-center rounded-lg text-sm text-slate-300 transition-colors hover:bg-white/10 hover:text-white focus-visible:ring-2 focus-visible:ring-blue-300 ${
                     collapsed
@@ -190,8 +208,8 @@ export function AppShell() {
             })}
           </nav>
 
-          {/* User Profile & Sign Out Footer */}
-          <div className="mt-auto border-t border-white/10 pt-4">
+          {/* User Profile & Sign Out Footer: Pinned at bottom of viewport */}
+          <div className="shrink-0 mt-auto border-t border-white/10 pt-3">
             {collapsed && !mobileNavOpen ? (
               // Collapsed View: Centered Avatar + Centered Sign-out Icon
               <div className="flex flex-col items-center gap-3">
@@ -261,9 +279,13 @@ export function AppShell() {
           </div>
         </aside>
 
-        {/* Main Content Area */}
-        <main id="main-content" className="flex min-w-0 flex-1 flex-col">
-          <header className="sticky top-0 z-10 flex min-h-16 items-center justify-between border-b border-slate-200 bg-white/95 px-4 shadow-xs backdrop-blur-sm md:px-8">
+        {/* Main Content Area: Independently Scrollable */}
+        <main
+          id="main-content"
+          className="flex min-w-0 flex-1 flex-col h-screen h-[100dvh] overflow-y-auto"
+        >
+          {/* Top Sticky Header */}
+          <header className="sticky top-0 z-10 shrink-0 flex min-h-16 items-center justify-between border-b border-slate-200 bg-white/95 px-4 shadow-xs backdrop-blur-sm md:px-8">
             <div className="flex items-center gap-3">
               <Button
                 type="button"
@@ -289,8 +311,38 @@ export function AppShell() {
             </div>
 
             <div className="flex items-center gap-3">
+              {/* Palette & Theme Customizer Swatches */}
+              <div
+                className="hidden items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 p-1 sm:flex"
+                title="Personalizar paleta de colores"
+              >
+                {THEME_OPTIONS.map((t) => (
+                  <Tooltip key={t.id}>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        onClick={() => handleThemeChange(t.id)}
+                        aria-label={`Cambiar a paleta ${t.name}`}
+                        className={`h-5 w-5 rounded-full transition-transform hover:scale-110 focus-visible:ring-2 focus-visible:ring-blue-500 ${
+                          currentTheme === t.id
+                            ? "ring-2 ring-blue-500 ring-offset-1 scale-105"
+                            : "opacity-70 hover:opacity-100"
+                        }`}
+                        style={{ backgroundColor: t.previewColor }}
+                      />
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom">
+                      <p className="font-semibold">{t.name}</p>
+                      <p className="text-[10px] text-slate-300">
+                        {t.description}
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                ))}
+              </div>
+
               {/* Security Pill */}
-              <Badge variant="success" className="hidden py-1 sm:inline-flex">
+              <Badge variant="success" className="hidden py-1 lg:inline-flex">
                 <LockIcon className="h-3.5 w-3.5 text-emerald-700" />
                 <span>Sesión segura · Cloud Staging</span>
               </Badge>
