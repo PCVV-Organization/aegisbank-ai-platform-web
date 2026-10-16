@@ -6,6 +6,7 @@ type AuthState = {
   user: User | null;
   signIn: (dni?: string, password?: string) => Promise<void>;
   signOut: () => Promise<void>;
+  refreshSession: () => Promise<void>;
 };
 const authMode =
   import.meta.env.VITE_AUTH_MODE ??
@@ -31,6 +32,7 @@ let state: AuthState = {
   user: null,
   signIn: async () => undefined,
   signOut: async () => undefined,
+  refreshSession: async () => undefined,
 };
 let syntheticToken: string | null = null;
 const CSRF_STORAGE_KEY = "aegisbank_csrf_token";
@@ -146,6 +148,31 @@ state.signOut = async () => {
     return;
   }
   await msal.logoutRedirect();
+};
+state.refreshSession = async () => {
+  if (authMode === "synthetic-password" && apiBase) {
+    const csrf = await ensureCsrfToken();
+    const response = await fetch(`${apiBase}/api/v1/auth/refresh`, {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+        ...(csrf ? { "X-CSRF-Token": csrf } : {}),
+      },
+    });
+    if (!response.ok) {
+      if (response.status === 401 || response.status === 403) {
+        await state.signOut();
+        throw new Error("Sesión expirada");
+      }
+      return;
+    }
+    const result = (await response.json()) as { csrf_token?: string };
+    if (result.csrf_token) {
+      setCsrfToken(result.csrf_token);
+    }
+    return;
+  }
 };
 export const authConfigured =
   authMode === "synthetic-password"
