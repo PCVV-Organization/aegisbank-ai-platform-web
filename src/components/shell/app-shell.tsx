@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, Outlet } from "@tanstack/react-router";
+import { Link, Outlet, useNavigate } from "@tanstack/react-router";
 import { useAuth } from "../../auth/use-auth";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
@@ -44,12 +44,19 @@ export const NAV_ITEMS = [
 
 export function AppShell() {
   const { user, signOut } = useAuth();
+  const navigate = useNavigate();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
 
   useEffect(() => {
     initTheme();
   }, []);
+
+  const handleSignOut = () => {
+    void signOut()
+      .catch(() => undefined)
+      .finally(() => navigate({ to: "/login" }));
+  };
 
   return (
     <TooltipProvider delayDuration={150}>
@@ -218,7 +225,7 @@ export function AppShell() {
                       type="button"
                       variant="sidebarDestructive"
                       size="icon"
-                      onClick={signOut}
+                      onClick={handleSignOut}
                       aria-label="Cerrar sesión"
                     >
                       <LogoutIcon className="h-5 w-5" />
@@ -254,7 +261,7 @@ export function AppShell() {
                       type="button"
                       variant="sidebarDestructive"
                       size="icon"
-                      onClick={signOut}
+                      onClick={handleSignOut}
                       aria-label="Cerrar sesión"
                     >
                       <LogoutIcon className="h-5 w-5" />
