@@ -84,4 +84,13 @@ export const handlers = [
     mockServiceRequests = [newRecord, ...mockServiceRequests];
     return HttpResponse.json(newRecord, { status: 201 });
   }),
+
+  http.post("*/api/v1/auth/refresh", () => {
+    return HttpResponse.json({
+      status: "ok",
+      expires_at: Math.floor(Date.now() / 1000) + 900,
+      expires_in: 900,
+      csrf_token: "test-csrf-token",
+    });
+  }),
 ];
