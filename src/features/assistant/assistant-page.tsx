@@ -1,6 +1,17 @@
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "../../auth/use-auth";
+import { apiFetch } from "../../api/transport";
 import { type ChatMessage, useAssistantRun } from "./use-assistant-run";
+
+interface PersistedConversationTurn {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  timestamp: string;
+  metadata?: {
+    execution_mode?: ChatMessage["executionMode"];
+  };
+}
 
 const QUICK_SUGGESTIONS = [
   "¿Cuál es mi saldo disponible?",
@@ -55,6 +66,41 @@ export function AssistantPage() {
       // Ignore quota errors in constrained environments
     }
   }, [messages, storageKey]);
+
+  // Rehydrate the active session from the customer-partitioned Cosmos history.
+  // Browser storage is only a fast cache; the server remains authoritative.
+  useEffect(() => {
+    let cancelled = false;
+    void apiFetch<PersistedConversationTurn[]>(
+      `/api/v1/conversations/${encodeURIComponent(sessionId)}`,
+    )
+      .then((turns) => {
+        if (cancelled || !turns.length) return;
+        const restored = turns.map((turn) => ({
+          id: turn.id,
+          role: turn.role,
+          content: turn.content,
+          timestamp: turn.timestamp,
+          ...(turn.metadata?.execution_mode
+            ? { executionMode: turn.metadata.execution_mode }
+            : {}),
+        }));
+        setMessages((current) => {
+          const byId = new Map(current.map((item) => [item.id, item]));
+          for (const item of restored) byId.set(item.id, item);
+          return [...byId.values()].sort(
+            (a, b) =>
+              new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
+          );
+        });
+      })
+      .catch(() => {
+        // A transient history outage must not prevent the cached chat from opening.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [sessionId]);
 
   // Keep sessionStorage in sync for sessionId
   useEffect(() => {
