@@ -2,6 +2,7 @@ import { apiFetch } from "../../../api/transport";
 import type {
   AssistantRunInput,
   AssistantRunResponse,
+  PersistedConversationTurn,
 } from "./assistant-contracts";
 
 export function runAssistant({
@@ -17,4 +18,12 @@ export function runAssistant({
       session_id: sessionId,
     }),
   });
+}
+
+export function fetchConversationHistory(
+  sessionId: string,
+): Promise<PersistedConversationTurn[]> {
+  return apiFetch<PersistedConversationTurn[]>(
+    `/api/v1/conversations/${encodeURIComponent(sessionId)}`,
+  );
 }

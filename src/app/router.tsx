@@ -22,8 +22,8 @@ import {
   CardContent,
 } from "../components/ui/card";
 import { ShieldBrandIcon, AssistantIcon } from "../components/icons";
-import { AssistantPage } from "../features/assistant/assistant-page";
-import { ServiceRequestForm } from "../features/service-requests/service-request-form";
+import { AssistantPage } from "../features/assistant";
+import { ServiceRequestForm } from "../features/service-requests";
 
 function LoginPage() {
   const { signIn } = useAuth();

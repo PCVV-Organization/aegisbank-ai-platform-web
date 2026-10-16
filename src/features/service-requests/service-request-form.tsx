@@ -28,14 +28,26 @@ const CATEGORY_OPTIONS: {
   { value: "FEE", label: "Revisión de comisiones o cargos" },
 ];
 
-const requestSchema = z.object({
-  category: z.enum(["LOAN", "INSTALLMENT", "FEE", "GENERAL"]),
-  summary: z
-    .string()
-    .trim()
-    .min(5, "El resumen debe tener al menos 5 caracteres.")
-    .max(240, "El resumen no puede exceder 240 caracteres."),
-});
+const categorySchema = z.enum(["LOAN", "INSTALLMENT", "FEE", "GENERAL"]);
+
+const summarySchema = z
+  .string()
+  .trim()
+  .min(5, "El resumen debe tener al menos 5 caracteres.")
+  .max(240, "El resumen no puede exceder 240 caracteres.");
+
+function getErrorMessage(error: unknown): string {
+  if (typeof error === "string") return error;
+  if (error && typeof error === "object") {
+    if (
+      "message" in error &&
+      typeof (error as { message: unknown }).message === "string"
+    ) {
+      return (error as { message: string }).message;
+    }
+  }
+  return String(error);
+}
 
 function formatDate(isoString: string): string {
   try {
@@ -53,7 +65,8 @@ function formatDate(isoString: string): string {
 }
 
 export function ServiceRequestForm() {
-  const { requests, isLoading, isError: error } = useServiceRequests();
+  const { requests, isLoading, createRequest, isCreating, error } =
+    useServiceRequests();
 
   const [submittedTicket, setSubmittedTicket] =
     useState<ServiceRequestItem | null>(null);
@@ -64,15 +77,39 @@ export function ServiceRequestForm() {
       category: "GENERAL" as ServiceRequestCategory,
       summary: "",
     },
-    validators: {
-      onChange: requestSchema,
-    },
     onSubmit: async ({ value }) => {
       setSubmissionError(null);
-      requestSchema.parse(value);
-      setSubmissionError(
-        "La solicitud requiere aprobación humana explícita antes de crear un registro en Core Banking.",
-      );
+      const catParsed = categorySchema.safeParse(value.category);
+      if (!catParsed.success) {
+        setSubmissionError(
+          catParsed.error.issues[0]?.message || "Categoría no válida.",
+        );
+        return;
+      }
+
+      const sumParsed = summarySchema.safeParse(value.summary);
+      if (!sumParsed.success) {
+        setSubmissionError(
+          sumParsed.error.issues[0]?.message ||
+            "El resumen debe tener al menos 5 caracteres.",
+        );
+        return;
+      }
+
+      try {
+        const newRecord = await createRequest({
+          category: catParsed.data,
+          summary: sumParsed.data,
+        });
+        setSubmittedTicket(newRecord);
+        form.reset();
+      } catch (err) {
+        setSubmissionError(
+          err instanceof Error
+            ? err.message
+            : "No se pudo registrar la solicitud en Core Banking. Intente nuevamente.",
+        );
+      }
     },
   });
 
@@ -170,11 +207,11 @@ export function ServiceRequestForm() {
           <Card className="shadow-sm">
             <CardHeader className="pb-4">
               <CardTitle className="text-lg sm:text-xl">
-                Nueva solicitud o reclamo
+                Nueva solicitud de servicio
               </CardTitle>
               <CardDescription>
-                Registra consultas operativas, reprogramaciones o revisiones de
-                comisiones sobre tus productos sintéticos.
+                Registra una consulta formal, reclamo o trámite supervisado en
+                AegisBank.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -196,14 +233,24 @@ export function ServiceRequestForm() {
                 className="space-y-4"
               >
                 {/* Category Selector */}
-                <form.Field name="category">
+                <form.Field
+                  name="category"
+                  validators={{
+                    onChange: ({ value }) => {
+                      const res = categorySchema.safeParse(value);
+                      return res.success
+                        ? undefined
+                        : res.error.issues[0]?.message;
+                    },
+                  }}
+                >
                   {(field) => (
                     <div className="space-y-1.5">
                       <label
                         htmlFor={field.name}
                         className="text-xs font-semibold text-slate-700"
                       >
-                        Categoría de solicitud
+                        Categoría de la solicitud
                       </label>
                       <select
                         id={field.name}
@@ -223,9 +270,11 @@ export function ServiceRequestForm() {
                           </option>
                         ))}
                       </select>
-                      {field.state.meta.errors ? (
-                        <p className="text-xs text-rose-600">
-                          {field.state.meta.errors.join(", ")}
+                      {field.state.meta.errors?.length ? (
+                        <p className="text-xs text-rose-600" role="alert">
+                          {field.state.meta.errors
+                            .map(getErrorMessage)
+                            .join(", ")}
                         </p>
                       ) : null}
                     </div>
@@ -233,37 +282,66 @@ export function ServiceRequestForm() {
                 </form.Field>
 
                 {/* Summary / Description Textarea */}
-                <form.Field name="summary">
-                  {(field) => (
-                    <div className="space-y-1.5">
-                      <div className="flex items-center justify-between">
-                        <label
-                          htmlFor={field.name}
-                          className="text-xs font-semibold text-slate-700"
-                        >
-                          Descripción del caso
-                        </label>
-                        <span className="text-[11px] text-slate-600">
-                          {field.state.value.length}/240
-                        </span>
+                <form.Field
+                  name="summary"
+                  validators={{
+                    onChange: ({ value }) => {
+                      if (!value || value.trim().length === 0) {
+                        return undefined; // Don't show error until user types or submits
+                      }
+                      const res = summarySchema.safeParse(value);
+                      return res.success
+                        ? undefined
+                        : res.error.issues[0]?.message;
+                    },
+                  }}
+                >
+                  {(field) => {
+                    const hasError = Boolean(field.state.meta.errors?.length);
+                    const errorMsg = field.state.meta.errors
+                      ?.map(getErrorMessage)
+                      .filter(Boolean)
+                      .join(", ");
+
+                    return (
+                      <div className="space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <label
+                            htmlFor={field.name}
+                            className="text-xs font-semibold text-slate-700"
+                          >
+                            Resumen detallado
+                          </label>
+                          <span className="text-[11px] text-slate-600">
+                            {field.state.value.length}/240
+                          </span>
+                        </div>
+                        <textarea
+                          id={field.name}
+                          name={field.name}
+                          rows={3}
+                          value={field.state.value}
+                          onBlur={field.handleBlur}
+                          onChange={(e) => field.handleChange(e.target.value)}
+                          aria-invalid={hasError}
+                          aria-describedby={
+                            hasError ? `${field.name}-error` : undefined
+                          }
+                          placeholder="Describe detalladamente el requerimiento, cuota, préstamo o consulta..."
+                          className="w-full resize-none rounded-xl border border-slate-300 bg-white p-3 text-sm text-slate-900 shadow-xs placeholder:text-slate-600 transition-colors focus:border-blue-600 focus:outline-hidden focus:ring-2 focus:ring-blue-600/20"
+                        />
+                        {hasError && errorMsg ? (
+                          <p
+                            id={`${field.name}-error`}
+                            className="text-xs text-rose-600"
+                            role="alert"
+                          >
+                            {errorMsg}
+                          </p>
+                        ) : null}
                       </div>
-                      <textarea
-                        id={field.name}
-                        name={field.name}
-                        rows={3}
-                        value={field.state.value}
-                        onBlur={field.handleBlur}
-                        onChange={(e) => field.handleChange(e.target.value)}
-                        placeholder="Ejemplo: Solicito reprogramación de cuota de crédito por cambio en fecha de pago laboral..."
-                        className="w-full resize-none rounded-xl border border-slate-300 bg-white p-3 text-sm text-slate-900 shadow-xs placeholder:text-slate-600 transition-colors focus:border-blue-600 focus:outline-hidden focus:ring-2 focus:ring-blue-600/20"
-                      />
-                      {field.state.meta.errors ? (
-                        <p className="text-xs text-rose-600">
-                          {field.state.meta.errors.join(", ")}
-                        </p>
-                      ) : null}
-                    </div>
-                  )}
+                    );
+                  }}
                 </form.Field>
 
                 {/* Submit button & HITL notice */}
@@ -273,10 +351,10 @@ export function ServiceRequestForm() {
                   {([canSubmit, isSubmitting]) => (
                     <Button
                       type="submit"
-                      disabled={!canSubmit || isSubmitting}
+                      disabled={!canSubmit || isSubmitting || isCreating}
                       className="w-full sm:w-auto"
                     >
-                      {isSubmitting ? (
+                      {isSubmitting || isCreating ? (
                         <>
                           <span
                             className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/40 border-t-white"
