@@ -167,25 +167,35 @@ function LoginPage() {
 
 function Page({
   title,
+  kicker = "Banca Digital · AegisBank",
+  subtitle,
   children,
 }: {
   title: string;
+  kicker?: string;
+  subtitle?: string;
   children?: React.ReactNode;
 }) {
   return (
     <section className="mx-auto max-w-6xl">
-      <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-blue-700">
-        Your banking workspace
-      </p>
-      <h1 className="text-3xl font-semibold tracking-tight text-slate-950">
-        {title}
-      </h1>
+      <div className="mb-6 space-y-1 sm:mb-8">
+        <p className="text-xs font-bold uppercase tracking-[0.2em] text-blue-700">
+          {kicker}
+        </p>
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+          {title}
+        </h1>
+        {subtitle ? (
+          <p className="text-xs text-slate-500 sm:text-sm">{subtitle}</p>
+        ) : null}
+      </div>
       {children ?? (
         <Card className="mt-6 border-dashed border-slate-300 bg-white/70 p-8">
-          <p className="font-semibold text-slate-900">Coming next</p>
+          <p className="font-semibold text-slate-900">Módulo en preparación</p>
           <p className="mt-2 max-w-xl text-sm text-slate-600 leading-relaxed">
-            This module is being prepared for the next product slice. Your
-            synthetic data stays local until the backend contract is connected.
+            Este módulo se encuentra en despliegue para el siguiente hito de
+            producto. Los datos sintéticos se mantienen protegidos bajo el
+            perímetro bancario.
           </p>
         </Card>
       )}
@@ -293,7 +303,11 @@ const serviceRequestsRoute = createRoute({
   getParentRoute: () => appRoute,
   path: "/service-requests",
   component: () => (
-    <Page title="Service requests">
+    <Page
+      title="Solicitudes de Servicio y Reclamos"
+      kicker="Gestión y Mesa de Ayuda Bancaria"
+      subtitle="Radica consultas formales, solicitudes de reprogramación o reclamos auditados bajo supervisión humana (HITL)."
+    >
       <ServiceRequestForm />
     </Page>
   ),

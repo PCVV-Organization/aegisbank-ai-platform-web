@@ -84,7 +84,7 @@ export function AppShell() {
             mobileNavOpen
               ? "translate-x-0 shadow-2xl"
               : "-translate-x-full md:translate-x-0"
-          } ${collapsed ? "w-64 md:w-20 p-3" : "w-64 p-4 md:p-5"}`}
+          } ${collapsed ? "w-64 md:w-20 p-3" : "w-64 md:w-72 p-4 md:p-5"}`}
         >
           {/* Sidebar Header: Brand & Collapse Toggle */}
           <div
@@ -248,19 +248,22 @@ export function AppShell() {
               </div>
             ) : (
               // Expanded View: User Card + Info + Sign-out Button
-              <div className="flex items-center justify-between rounded-xl bg-white/5 p-2.5 ring-1 ring-white/10">
+              <div className="flex items-center justify-between gap-2.5 rounded-xl bg-white/5 p-2.5 ring-1 ring-white/10">
                 <div className="flex min-w-0 items-center gap-2.5">
                   <Avatar name={user?.name ?? "Synthetic customer"} />
                   <div className="min-w-0">
-                    <p className="truncate text-xs font-semibold text-white">
+                    <p
+                      className="truncate text-xs font-semibold text-white"
+                      title={user?.name ?? "Synthetic customer"}
+                    >
                       {user?.name ?? "Synthetic customer"}
                     </p>
-                    <div className="mt-0.5 flex items-center gap-1.5">
+                    <div className="mt-0.5 flex items-center gap-1.5 whitespace-nowrap">
                       <span className="relative flex h-2 w-2">
                         <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
                         <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
                       </span>
-                      <span className="text-[11px] text-emerald-300">
+                      <span className="text-[11px] font-medium text-emerald-300">
                         Sesión activa
                       </span>
                     </div>
