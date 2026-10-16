@@ -26,6 +26,21 @@ function formatTime(isoString?: string): string {
   return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 }
 
+function sanitizeRestoredMessage(message: ChatMessage): ChatMessage {
+  if (message.role !== "assistant") return message;
+  const unsafe =
+    /functools\s*\(|\{\s*["']name["']\s*:\s*["'](?:search_knowledge|get_my_loans|get_loan_details|get_next_installment|create_service_request)/i.test(
+      message.content,
+    );
+  return unsafe
+    ? {
+        ...message,
+        content:
+          "No pude recuperar una respuesta segura para esta consulta. Vuelve a formularla para obtener información bancaria autorizada.",
+      }
+    : message;
+}
+
 export function AssistantPage() {
   const { user } = useAuth();
   const customerId = user?.id || "CUST-0001";
@@ -48,7 +63,9 @@ export function AssistantPage() {
   const [messages, setMessages] = useState<ChatMessage[]>(() => {
     try {
       const saved = sessionStorage.getItem(storageKey);
-      return saved ? JSON.parse(saved) : [];
+      return saved
+        ? (JSON.parse(saved) as ChatMessage[]).map(sanitizeRestoredMessage)
+        : [];
     } catch {
       return [];
     }
@@ -76,15 +93,17 @@ export function AssistantPage() {
     )
       .then((turns) => {
         if (cancelled || !turns.length) return;
-        const restored = turns.map((turn) => ({
-          id: turn.id,
-          role: turn.role,
-          content: turn.content,
-          timestamp: turn.timestamp,
-          ...(turn.metadata?.execution_mode
-            ? { executionMode: turn.metadata.execution_mode }
-            : {}),
-        }));
+        const restored = turns.map((turn) =>
+          sanitizeRestoredMessage({
+            id: turn.id,
+            role: turn.role,
+            content: turn.content,
+            timestamp: turn.timestamp,
+            ...(turn.metadata?.execution_mode
+              ? { executionMode: turn.metadata.execution_mode }
+              : {}),
+          }),
+        );
         setMessages((current) => {
           const byId = new Map(current.map((item) => [item.id, item]));
           for (const item of restored) byId.set(item.id, item);
