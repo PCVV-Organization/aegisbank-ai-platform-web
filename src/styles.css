@@ -2,17 +2,25 @@
 
 @layer base {
   :root {
-    /* AegisBank Fintech Theme & Tokens */
-    --color-brand-navy: #0f2747;
-    --color-brand-navy-dark: #0a192f;
-    --color-brand-navy-light: #173b6c;
-    --color-brand-accent: #2563eb;
+    /* Theme: Default AegisBank Corporate Navy */
+    --sidebar-bg: #0f2747;
+    --sidebar-fg: #f8fafc;
+    --sidebar-muted: #94a3b8;
+    --sidebar-border: rgba(255, 255, 255, 0.1);
+    --sidebar-hover: rgba(255, 255, 255, 0.08);
+    --sidebar-active: rgba(37, 99, 235, 0.25);
+    --sidebar-active-border: #60a5fa;
+
+    --primary: #0f2747;
+    --primary-hover: #173b6c;
+    --primary-foreground: #ffffff;
+    --brand-accent: #2563eb;
 
     /* Semantic Financial Tokens (banking-ui-ux) */
-    --color-financial-positive: #059669;
-    --color-financial-pending: #d97706;
-    --color-financial-critical: #e11d48;
-    --color-financial-info: #2563eb;
+    --financial-positive: #059669;
+    --financial-pending: #d97706;
+    --financial-critical: #e11d48;
+    --financial-info: #2563eb;
 
     /* Surface & Component Tokens */
     --background: #f8fafc;
@@ -29,6 +37,39 @@
     background: var(--background);
     font-synthesis: none;
     text-rendering: optimizeLegibility;
+  }
+
+  /* Emerald Palette: Private Banking & Wealth Management */
+  [data-theme="emerald"] {
+    --sidebar-bg: #064e3b;
+    --sidebar-active: rgba(16, 185, 129, 0.25);
+    --sidebar-active-border: #34d399;
+    --primary: #064e3b;
+    --primary-hover: #047857;
+    --brand-accent: #059669;
+    --ring: #10b981;
+  }
+
+  /* Sapphire Palette: Digital Fintech & Innovation */
+  [data-theme="sapphire"] {
+    --sidebar-bg: #1e3a8a;
+    --sidebar-active: rgba(59, 130, 246, 0.25);
+    --sidebar-active-border: #93c5fd;
+    --primary: #1e3a8a;
+    --primary-hover: #1d4ed8;
+    --brand-accent: #3b82f6;
+    --ring: #3b82f6;
+  }
+
+  /* Slate / Midnight Palette: Modern Executive Dark Sidebar */
+  [data-theme="slate"] {
+    --sidebar-bg: #090d16;
+    --sidebar-active: rgba(148, 163, 184, 0.2);
+    --sidebar-active-border: #38bdf8;
+    --primary: #0f172a;
+    --primary-hover: #1e293b;
+    --brand-accent: #0284c7;
+    --ring: #38bdf8;
   }
 
   * {
