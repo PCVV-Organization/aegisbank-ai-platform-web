@@ -16,7 +16,62 @@ import type {
   ServiceRequestItem,
   ServiceRequestCategory,
   ServiceRequestStatus,
+  ServiceRequestReasonCode,
 } from "./api/service-request-contracts";
+
+const REASON_OPTIONS: Record<
+  ServiceRequestCategory,
+  { code: ServiceRequestReasonCode; label: string; description: string }[]
+> = {
+  LOAN: [
+    {
+      code: "LOAN_RESTRUCTURING",
+      label: "Reprogramación del préstamo",
+      description: "Revisión o reprogramación de cuotas.",
+    },
+    {
+      code: "LOAN_BALANCE_DISPUTE",
+      label: "Saldo o detalle del préstamo",
+      description: "Diferencia en saldo o detalle.",
+    },
+  ],
+  INSTALLMENT: [
+    {
+      code: "INSTALLMENT_DATE",
+      label: "Fecha de vencimiento",
+      description: "Consulta o reclamo sobre la fecha.",
+    },
+    {
+      code: "INSTALLMENT_DUPLICATE_CHARGE",
+      label: "Cobro duplicado de cuota",
+      description: "Reportar un cobro repetido.",
+    },
+    {
+      code: "INSTALLMENT_AMOUNT_DISPUTE",
+      label: "Importe de cuota incorrecto",
+      description: "El importe no coincide.",
+    },
+  ],
+  FEE: [
+    {
+      code: "FEE_UNRECOGNIZED",
+      label: "Comisión o cargo no reconocido",
+      description: "No reconoces el cargo.",
+    },
+    {
+      code: "FEE_DUPLICATE_CHARGE",
+      label: "Comisión o cargo duplicado",
+      description: "Reportar un cargo repetido.",
+    },
+  ],
+  GENERAL: [
+    {
+      code: "GENERAL_OTHER",
+      label: "Otro motivo",
+      description: "Describe el motivo.",
+    },
+  ],
+};
 
 const CATEGORY_OPTIONS: {
   value: ServiceRequestCategory;
@@ -142,6 +197,8 @@ export function ServiceRequestForm() {
   const form = useForm({
     defaultValues: {
       category: "GENERAL" as ServiceRequestCategory,
+      reasonCode: "GENERAL_OTHER" as ServiceRequestReasonCode,
+      reasonLabel: "Otro motivo",
       summary: "",
     },
     onSubmit: async ({ value }) => {
@@ -166,6 +223,11 @@ export function ServiceRequestForm() {
       try {
         const newRecord = await createRequest({
           category: catParsed.data,
+          reasonCode: value.reasonCode,
+          reasonLabel:
+            REASON_OPTIONS[catParsed.data].find(
+              (item) => item.code === value.reasonCode,
+            )?.label ?? "Otro motivo",
           summary: sumParsed.data,
         });
         setSubmittedTicket(newRecord);
@@ -383,9 +445,18 @@ export function ServiceRequestForm() {
                           value={field.state.value}
                           onBlur={field.handleBlur}
                           onChange={(e) =>
-                            field.handleChange(
-                              e.target.value as ServiceRequestCategory,
-                            )
+                            (() => {
+                              const category = e.target
+                                .value as ServiceRequestCategory;
+                              field.handleChange(category);
+                              const options = REASON_OPTIONS[category];
+                              if (options?.[0]) {
+                                form.setFieldValue(
+                                  "reasonCode",
+                                  options[0].code,
+                                );
+                              }
+                            })()
                           }
                           className="min-h-11 w-full appearance-none rounded-xl border border-slate-300 bg-white px-3.5 pr-10 py-2.5 text-sm font-medium leading-5 text-slate-900 shadow-xs transition-colors hover:border-slate-400 focus:border-blue-600 focus:outline-hidden focus:ring-2 focus:ring-blue-600/20"
                         >
@@ -422,6 +493,44 @@ export function ServiceRequestForm() {
                             .join(", ")}
                         </p>
                       ) : null}
+                    </div>
+                  )}
+                </form.Field>
+
+                <form.Field name="reasonCode">
+                  {(field) => (
+                    <div className="space-y-1.5">
+                      <label
+                        htmlFor={field.name}
+                        className="text-xs font-bold text-slate-800"
+                      >
+                        Motivo de la solicitud
+                      </label>
+                      <select
+                        id={field.name}
+                        value={field.state.value}
+                        onChange={(event) =>
+                          field.handleChange(
+                            event.target.value as ServiceRequestReasonCode,
+                          )
+                        }
+                        className="min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 focus:border-blue-600 focus:outline-hidden focus:ring-2 focus:ring-blue-600/20"
+                      >
+                        {REASON_OPTIONS[form.getFieldValue("category")].map(
+                          (option) => (
+                            <option key={option.code} value={option.code}>
+                              {option.label}
+                            </option>
+                          ),
+                        )}
+                      </select>
+                      <p className="text-xs text-slate-500">
+                        {
+                          REASON_OPTIONS[form.getFieldValue("category")].find(
+                            (option) => option.code === field.state.value,
+                          )?.description
+                        }
+                      </p>
                     </div>
                   )}
                 </form.Field>

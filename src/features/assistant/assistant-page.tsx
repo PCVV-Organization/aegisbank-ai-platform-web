@@ -79,7 +79,9 @@ export function AssistantPage() {
   const handleApproval = async (approvalId: string, approved: boolean) => {
     setApprovingId(approvalId);
     try {
-      await decideAssistantApproval(approvalId, approved);
+      const decision = await decideAssistantApproval(approvalId, approved);
+      const serviceRequestId =
+        decision.approval.execution_result?.service_request_id;
       setMessages((current) =>
         current.map((message) =>
           message.approvalRequests?.some(
@@ -96,6 +98,20 @@ export function AssistantPage() {
             : message,
         ),
       );
+      if (approved && decision.executed && serviceRequestId) {
+        setMessages((current) =>
+          current.map((message) =>
+            message.approvalRequests?.some(
+              (request) => request.approval_id === approvalId,
+            )
+              ? {
+                  ...message,
+                  content: `${message.content}\n\nSolicitud registrada correctamente. Número de reclamo: ${serviceRequestId}.`,
+                }
+              : message,
+          ),
+        );
+      }
     } finally {
       setApprovingId(null);
     }
@@ -232,6 +248,7 @@ export function AssistantPage() {
             toolCount: data.tool_count,
             rounds: data.rounds,
             approvalRequests: data.approval_requests,
+            guidedRequest: data.guided_request,
           };
           setMessages((prev) => [...prev, assistantMsg]);
         },
@@ -457,6 +474,40 @@ export function AssistantPage() {
                           </div>
                         </div>
                       ))}
+
+                    {item.role === "assistant" &&
+                    item.guidedRequest?.options?.length ? (
+                      <div
+                        className="mt-3 space-y-2 border-t border-slate-200/70 pt-3"
+                        aria-label="Opciones para tu solicitud"
+                      >
+                        <p className="text-xs font-semibold text-slate-600">
+                          Selecciona una opción
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          {item.guidedRequest.options.map((option) => (
+                            <button
+                              key={
+                                option.reason_code ??
+                                option.category ??
+                                option.label
+                              }
+                              type="button"
+                              className="rounded-lg border border-blue-200 bg-white px-3 py-2 text-left text-xs font-semibold text-blue-900 transition-colors hover:bg-blue-50 focus-visible:ring-2 focus-visible:ring-blue-600"
+                              onClick={() => {
+                                const selection = option.reason_code
+                                  ? `Selecciono el motivo ${option.reason_code}: ${option.label}. ${option.requires_description ? "Mi detalle es: " : ""}`
+                                  : `Quiero registrar un reclamo de categoría ${option.category}.`;
+                                inputRef.current?.focus();
+                                setMessage(selection);
+                              }}
+                            >
+                              {option.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    ) : null}
 
                     {item.role === "assistant" &&
                     (item.executionMode || item.latencyMs !== undefined) ? (
