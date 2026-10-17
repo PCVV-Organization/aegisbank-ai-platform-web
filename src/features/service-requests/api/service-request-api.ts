@@ -14,6 +14,8 @@ export function mapBackendItemToDomain(
     category: item.category,
     summary: item.description,
     status: item.status,
+    ...(item.reason_code ? { reasonCode: item.reason_code } : {}),
+    ...(item.reason_label ? { reasonLabel: item.reason_label } : {}),
     createdAt: item.created_at,
   };
 }
@@ -40,6 +42,8 @@ export async function createCustomerServiceRequest(
   const body = {
     category: payload.category,
     description: payload.summary,
+    reason_code: payload.reasonCode,
+    reason_label: payload.reasonLabel,
   };
 
   const response = await apiFetch<BackendServiceRequestItem>(
