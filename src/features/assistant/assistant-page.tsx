@@ -481,9 +481,16 @@ export function AssistantPage() {
                         className="mt-3 space-y-2 border-t border-slate-200/70 pt-3"
                         aria-label="Opciones para tu solicitud"
                       >
-                        <p className="text-xs font-semibold text-slate-600">
-                          Selecciona una opción
-                        </p>
+                        <div>
+                          <p className="text-xs font-semibold text-slate-700">
+                            {item.guidedRequest.step === "CATEGORY"
+                              ? "Elige una categoría"
+                              : "Motivos disponibles"}
+                          </p>
+                          <p className="mt-0.5 text-[11px] text-slate-500">
+                            Selecciona una opción para continuar.
+                          </p>
+                        </div>
                         <div className="flex flex-wrap gap-2">
                           {item.guidedRequest.options.map((option) => (
                             <button
@@ -500,12 +507,17 @@ export function AssistantPage() {
                                   ? `${option.label}: ${option.description}`
                                   : option.label
                               }
+                              disabled={run.isPending}
                               onClick={() => {
                                 const selection = option.reason_code
                                   ? `Selecciono el motivo: ${option.label}. ${option.requires_description ? "Mi detalle es: " : ""}`
                                   : `Quiero registrar un reclamo sobre ${option.label}.`;
-                                inputRef.current?.focus();
-                                setMessage(selection);
+                                if (option.requires_description) {
+                                  setMessage(selection);
+                                  inputRef.current?.focus();
+                                  return;
+                                }
+                                submitMessage(selection);
                               }}
                             >
                               <span className="block">{option.label}</span>
