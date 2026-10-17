@@ -12,6 +12,23 @@ export interface ChatMessage {
   toolCount?: number | undefined;
   rounds?: number | undefined;
   approvalRequests?: ApprovalRequest[] | undefined;
+  guidedRequest?: GuidedRequest | undefined;
+}
+
+export interface GuidedRequestOption {
+  category?: string;
+  reason_code?: string;
+  label: string;
+  description?: string;
+  requires_description?: boolean;
+}
+
+export interface GuidedRequest {
+  step: "CATEGORY" | "REASON" | "DESCRIPTION" | "CONFIRMATION";
+  category?: string;
+  reason_code?: string;
+  reason_label?: string;
+  options?: GuidedRequestOption[];
 }
 
 export interface ApprovalRequest {
@@ -36,6 +53,7 @@ export interface AssistantRunResponse {
   latency_ms?: number;
   tool_count?: number;
   approval_requests?: ApprovalRequest[];
+  guided_request?: GuidedRequest;
 }
 
 export interface PersistedConversationTurn {
