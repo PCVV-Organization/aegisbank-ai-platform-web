@@ -79,7 +79,9 @@ export function AssistantPage() {
   const handleApproval = async (approvalId: string, approved: boolean) => {
     setApprovingId(approvalId);
     try {
-      await decideAssistantApproval(approvalId, approved);
+      const decision = await decideAssistantApproval(approvalId, approved);
+      const serviceRequestId =
+        decision.approval.execution_result?.service_request_id;
       setMessages((current) =>
         current.map((message) =>
           message.approvalRequests?.some(
@@ -96,6 +98,20 @@ export function AssistantPage() {
             : message,
         ),
       );
+      if (approved && decision.executed && serviceRequestId) {
+        setMessages((current) =>
+          current.map((message) =>
+            message.approvalRequests?.some(
+              (request) => request.approval_id === approvalId,
+            )
+              ? {
+                  ...message,
+                  content: `${message.content}\n\nSolicitud registrada correctamente. Número de reclamo: ${serviceRequestId}.`,
+                }
+              : message,
+          ),
+        );
+      }
     } finally {
       setApprovingId(null);
     }
@@ -477,6 +493,63 @@ export function AssistantPage() {
                               }}
                             >
                               {option.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    ) : null}
+
+                    {item.role === "assistant" &&
+                    item.guidedRequest?.options?.length ? (
+                      <div
+                        className="mt-3 space-y-2 border-t border-slate-200/70 pt-3"
+                        aria-label="Opciones para tu solicitud"
+                      >
+                        <div>
+                          <p className="text-xs font-semibold text-slate-700">
+                            {item.guidedRequest.step === "CATEGORY"
+                              ? "Elige una categoría"
+                              : "Motivos disponibles"}
+                          </p>
+                          <p className="mt-0.5 text-[11px] text-slate-500">
+                            Selecciona una opción para continuar.
+                          </p>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {item.guidedRequest.options.map((option) => (
+                            <button
+                              key={
+                                option.reason_code ??
+                                option.category ??
+                                option.label
+                              }
+                              type="button"
+                              className="rounded-lg border border-blue-200 bg-white px-3 py-2 text-left text-xs font-semibold text-blue-900 transition-colors hover:bg-blue-50 focus-visible:ring-2 focus-visible:ring-blue-600"
+                              title={option.description}
+                              aria-label={
+                                option.description
+                                  ? `${option.label}: ${option.description}`
+                                  : option.label
+                              }
+                              disabled={run.isPending}
+                              onClick={() => {
+                                const selection = option.reason_code
+                                  ? `Selecciono el motivo: ${option.label}. ${option.requires_description ? "Mi detalle es: " : ""}`
+                                  : `Quiero registrar un reclamo sobre ${option.label}.`;
+                                if (option.requires_description) {
+                                  setMessage(selection);
+                                  inputRef.current?.focus();
+                                  return;
+                                }
+                                submitMessage(selection);
+                              }}
+                            >
+                              <span className="block">{option.label}</span>
+                              {option.description ? (
+                                <span className="mt-0.5 block font-normal text-slate-600">
+                                  {option.description}
+                                </span>
+                              ) : null}
                             </button>
                           ))}
                         </div>
