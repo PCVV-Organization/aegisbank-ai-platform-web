@@ -498,7 +498,7 @@ export function AssistantPage() {
                               onClick={() => {
                                 const selection = option.reason_code
                                   ? `Selecciono el motivo: ${option.label}. ${option.requires_description ? "Mi detalle es: " : ""}`
-                                  : `Quiero registrar un reclamo de categoría ${option.category}.`;
+                                  : `Quiero registrar un reclamo sobre ${option.label}.`;
                                 inputRef.current?.focus();
                                 setMessage(selection);
                               }}
