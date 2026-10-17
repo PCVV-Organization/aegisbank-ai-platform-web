@@ -1,0 +1,9 @@
+chore(repo): remove temporary commit message artifact
+
+Problem/purpose: remove the UTF-8 commit message file used to author the guided-option change.
+
+Changes:
+- delete the temporary COMMIT_MESSAGE.txt artifact
+
+Validation:
+- git diff --check
