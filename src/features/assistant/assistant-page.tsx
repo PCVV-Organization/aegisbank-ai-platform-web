@@ -79,7 +79,9 @@ export function AssistantPage() {
   const handleApproval = async (approvalId: string, approved: boolean) => {
     setApprovingId(approvalId);
     try {
-      await decideAssistantApproval(approvalId, approved);
+      const decision = await decideAssistantApproval(approvalId, approved);
+      const serviceRequestId =
+        decision.approval.execution_result?.service_request_id;
       setMessages((current) =>
         current.map((message) =>
           message.approvalRequests?.some(
@@ -96,6 +98,20 @@ export function AssistantPage() {
             : message,
         ),
       );
+      if (approved && decision.executed && serviceRequestId) {
+        setMessages((current) =>
+          current.map((message) =>
+            message.approvalRequests?.some(
+              (request) => request.approval_id === approvalId,
+            )
+              ? {
+                  ...message,
+                  content: `${message.content}\n\nSolicitud registrada correctamente. Número de reclamo: ${serviceRequestId}.`,
+                }
+              : message,
+          ),
+        );
+      }
     } finally {
       setApprovingId(null);
     }
