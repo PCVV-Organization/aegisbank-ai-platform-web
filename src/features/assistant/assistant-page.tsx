@@ -494,15 +494,21 @@ export function AssistantPage() {
                               }
                               type="button"
                               className="rounded-lg border border-blue-200 bg-white px-3 py-2 text-left text-xs font-semibold text-blue-900 transition-colors hover:bg-blue-50 focus-visible:ring-2 focus-visible:ring-blue-600"
+                              title={option.description}
                               onClick={() => {
                                 const selection = option.reason_code
-                                  ? `Selecciono el motivo ${option.reason_code}: ${option.label}. ${option.requires_description ? "Mi detalle es: " : ""}`
+                                  ? `Selecciono el motivo: ${option.label}. ${option.requires_description ? "Mi detalle es: " : ""}`
                                   : `Quiero registrar un reclamo de categoría ${option.category}.`;
                                 inputRef.current?.focus();
                                 setMessage(selection);
                               }}
                             >
-                              {option.label}
+                              <span className="block">{option.label}</span>
+                              {option.description ? (
+                                <span className="mt-0.5 block font-normal text-slate-600">
+                                  {option.description}
+                                </span>
+                              ) : null}
                             </button>
                           ))}
                         </div>
