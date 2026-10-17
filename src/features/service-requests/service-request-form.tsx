@@ -19,32 +19,173 @@ import type {
   ServiceRequestReasonCode,
 } from "./api/service-request-contracts";
 
-const REASON_OPTIONS: Record<ServiceRequestCategory, { code: ServiceRequestReasonCode; label: string; description: string }[]> = {
+const REASON_OPTIONS: Record<
+  ServiceRequestCategory,
+  { code: ServiceRequestReasonCode; label: string; description: string }[]
+> = {
+  ACCOUNT: [
+    {
+      code: "ACCOUNT_BALANCE_DISPUTE",
+      label: "Saldo de cuenta incorrecto",
+      description: "Diferencia en el saldo de una cuenta.",
+    },
+    {
+      code: "ACCOUNT_ACCESS",
+      label: "Acceso a la cuenta",
+      description: "Problema para acceder a la cuenta.",
+    },
+    {
+      code: "ACCOUNT_DATA_UPDATE",
+      label: "Actualización de datos de cuenta",
+      description: "Orientación para actualizar datos.",
+    },
+    {
+      code: "ACCOUNT_STATEMENT",
+      label: "Estado de cuenta",
+      description: "Orientación sobre un estado de cuenta.",
+    },
+  ],
+  CARD: [
+    {
+      code: "CARD_UNRECOGNIZED_TRANSACTION",
+      label: "Consumo no reconocido",
+      description: "Transacción con tarjeta que no reconoces.",
+    },
+    {
+      code: "CARD_BLOCKED",
+      label: "Tarjeta bloqueada",
+      description: "Revisión de una tarjeta bloqueada.",
+    },
+    {
+      code: "CARD_LOST_STOLEN",
+      label: "Tarjeta perdida o robada",
+      description: "Reportar pérdida o robo.",
+    },
+    {
+      code: "CARD_PAYMENT_DECLINED",
+      label: "Pago con tarjeta rechazado",
+      description: "Pago con tarjeta rechazado.",
+    },
+  ],
+  PAYMENT: [
+    {
+      code: "PAYMENT_NOT_RECEIVED",
+      label: "Pago no recibido",
+      description: "El beneficiario no recibió el pago.",
+    },
+    {
+      code: "PAYMENT_DUPLICATE",
+      label: "Pago duplicado",
+      description: "Pago registrado más de una vez.",
+    },
+    {
+      code: "PAYMENT_FAILED",
+      label: "Pago fallido",
+      description: "Pago que no pudo completarse.",
+    },
+    {
+      code: "PAYMENT_REFUND",
+      label: "Devolución de pago",
+      description: "Revisión de una devolución.",
+    },
+  ],
   LOAN: [
-    { code: "LOAN_RESTRUCTURING", label: "Reprogramación del préstamo", description: "Revisión o reprogramación de cuotas." },
-    { code: "LOAN_BALANCE_DISPUTE", label: "Saldo o detalle del préstamo", description: "Diferencia en saldo o detalle." },
-    { code: "LOAN_INTEREST_RATE", label: "Tasa de interés del préstamo", description: "Consultar o reclamar la tasa aplicada." },
-    { code: "LOAN_PAYMENT_DIFFICULTY", label: "Dificultad para pagar", description: "Orientación por dificultad temporal de pago." },
+    {
+      code: "LOAN_RESTRUCTURING",
+      label: "Reprogramación del préstamo",
+      description: "Revisión o reprogramación de cuotas.",
+    },
+    {
+      code: "LOAN_BALANCE_DISPUTE",
+      label: "Saldo o detalle del préstamo",
+      description: "Diferencia en saldo o detalle.",
+    },
+    {
+      code: "LOAN_INTEREST_RATE",
+      label: "Tasa de interés del préstamo",
+      description: "Consultar o reclamar la tasa aplicada.",
+    },
+    {
+      code: "LOAN_PAYMENT_DIFFICULTY",
+      label: "Dificultad para pagar",
+      description: "Orientación por dificultad temporal de pago.",
+    },
   ],
   INSTALLMENT: [
-    { code: "INSTALLMENT_DATE", label: "Fecha de vencimiento", description: "Consulta o reclamo sobre la fecha." },
-    { code: "INSTALLMENT_DUPLICATE_CHARGE", label: "Cobro duplicado de cuota", description: "Reportar un cobro repetido." },
-    { code: "INSTALLMENT_AMOUNT_DISPUTE", label: "Importe de cuota incorrecto", description: "El importe no coincide." },
-    { code: "INSTALLMENT_PAYMENT_NOT_REFLECTED", label: "Pago no reflejado", description: "El pago aún no aparece aplicado." },
-    { code: "INSTALLMENT_OVERDUE_DISPUTE", label: "Mora o vencimiento incorrecto", description: "La cuota fue marcada como vencida incorrectamente." },
+    {
+      code: "INSTALLMENT_DATE",
+      label: "Fecha de vencimiento",
+      description: "Consulta o reclamo sobre la fecha.",
+    },
+    {
+      code: "INSTALLMENT_DUPLICATE_CHARGE",
+      label: "Cobro duplicado de cuota",
+      description: "Reportar un cobro repetido.",
+    },
+    {
+      code: "INSTALLMENT_AMOUNT_DISPUTE",
+      label: "Importe de cuota incorrecto",
+      description: "El importe no coincide.",
+    },
+    {
+      code: "INSTALLMENT_PAYMENT_NOT_REFLECTED",
+      label: "Pago no reflejado",
+      description: "El pago aún no aparece aplicado.",
+    },
+    {
+      code: "INSTALLMENT_OVERDUE_DISPUTE",
+      label: "Mora o vencimiento incorrecto",
+      description: "La cuota fue marcada como vencida incorrectamente.",
+    },
   ],
   FEE: [
-    { code: "FEE_UNRECOGNIZED", label: "Comisión o cargo no reconocido", description: "No reconoces el cargo." },
-    { code: "FEE_DUPLICATE_CHARGE", label: "Comisión o cargo duplicado", description: "Reportar un cargo repetido." },
-    { code: "FEE_AMOUNT_DISPUTE", label: "Importe de comisión incorrecto", description: "El importe de la comisión no coincide." },
-    { code: "FEE_REFUND_REQUEST", label: "Solicitud de devolución", description: "Solicitar revisión para posible devolución." },
+    {
+      code: "FEE_UNRECOGNIZED",
+      label: "Comisión o cargo no reconocido",
+      description: "No reconoces el cargo.",
+    },
+    {
+      code: "FEE_DUPLICATE_CHARGE",
+      label: "Comisión o cargo duplicado",
+      description: "Reportar un cargo repetido.",
+    },
+    {
+      code: "FEE_AMOUNT_DISPUTE",
+      label: "Importe de comisión incorrecto",
+      description: "El importe de la comisión no coincide.",
+    },
+    {
+      code: "FEE_REFUND_REQUEST",
+      label: "Solicitud de devolución",
+      description: "Solicitar revisión para posible devolución.",
+    },
   ],
   GENERAL: [
-    { code: "GENERAL_FRAUD", label: "Fraude o estafa", description: "Reportar actividad fraudulenta." },
-    { code: "GENERAL_ACCOUNT_ACCESS", label: "Acceso o seguridad de cuenta", description: "Reportar un problema de acceso o seguridad." },
-    { code: "GENERAL_DATA_UPDATE", label: "Actualización de datos", description: "Orientación para actualizar datos." },
-    { code: "GENERAL_STATUS", label: "Estado de una solicitud", description: "Consultar un reclamo o solicitud existente." },
-    { code: "GENERAL_OTHER", label: "Otro motivo", description: "Describe el motivo." },
+    {
+      code: "GENERAL_FRAUD",
+      label: "Fraude o estafa",
+      description: "Reportar actividad fraudulenta.",
+    },
+    {
+      code: "GENERAL_ACCOUNT_ACCESS",
+      label: "Acceso o seguridad de cuenta",
+      description: "Reportar un problema de acceso o seguridad.",
+    },
+    {
+      code: "GENERAL_DATA_UPDATE",
+      label: "Actualización de datos",
+      description: "Orientación para actualizar datos.",
+    },
+    {
+      code: "GENERAL_STATUS",
+      label: "Estado de una solicitud",
+      description: "Consultar un reclamo o solicitud existente.",
+    },
+    {
+      code: "GENERAL_OTHER",
+      label: "Otro motivo",
+      description: "Describe el motivo.",
+    },
   ],
 };
 
@@ -54,6 +195,27 @@ const CATEGORY_OPTIONS: {
   shortLabel: string;
   badgeClass: string;
 }[] = [
+  {
+    value: "ACCOUNT",
+    label: "Cuentas y saldos",
+    shortLabel: "Cuentas",
+    badgeClass:
+      "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100",
+  },
+  {
+    value: "CARD",
+    label: "Tarjetas",
+    shortLabel: "Tarjetas",
+    badgeClass:
+      "bg-violet-50 text-violet-700 border-violet-200 hover:bg-violet-100",
+  },
+  {
+    value: "PAYMENT",
+    label: "Pagos y transferencias",
+    shortLabel: "Pagos",
+    badgeClass:
+      "bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100",
+  },
   {
     value: "GENERAL",
     label: "Consulta general institucional",
@@ -82,7 +244,15 @@ const CATEGORY_OPTIONS: {
   },
 ];
 
-const categorySchema = z.enum(["LOAN", "INSTALLMENT", "FEE", "GENERAL"]);
+const categorySchema = z.enum([
+  "ACCOUNT",
+  "CARD",
+  "PAYMENT",
+  "LOAN",
+  "INSTALLMENT",
+  "FEE",
+  "GENERAL",
+]);
 
 const summarySchema = z
   .string()
@@ -200,7 +370,9 @@ export function ServiceRequestForm() {
           category: catParsed.data,
           reasonCode: value.reasonCode,
           reasonLabel:
-            REASON_OPTIONS[catParsed.data].find((item) => item.code === value.reasonCode)?.label ?? "Otro motivo",
+            REASON_OPTIONS[catParsed.data].find(
+              (item) => item.code === value.reasonCode,
+            )?.label ?? "Otro motivo",
           summary: sumParsed.data,
         });
         setSubmittedTicket(newRecord);
@@ -419,11 +591,15 @@ export function ServiceRequestForm() {
                           onBlur={field.handleBlur}
                           onChange={(e) =>
                             (() => {
-                              const category = e.target.value as ServiceRequestCategory;
+                              const category = e.target
+                                .value as ServiceRequestCategory;
                               field.handleChange(category);
                               const options = REASON_OPTIONS[category];
                               if (options?.[0]) {
-                                form.setFieldValue("reasonCode", options[0].code);
+                                form.setFieldValue(
+                                  "reasonCode",
+                                  options[0].code,
+                                );
                               }
                             })()
                           }
@@ -469,21 +645,36 @@ export function ServiceRequestForm() {
                 <form.Field name="reasonCode">
                   {(field) => (
                     <div className="space-y-1.5">
-                      <label htmlFor={field.name} className="text-xs font-bold text-slate-800">
+                      <label
+                        htmlFor={field.name}
+                        className="text-xs font-bold text-slate-800"
+                      >
                         Motivo de la solicitud
                       </label>
                       <select
                         id={field.name}
                         value={field.state.value}
-                        onChange={(event) => field.handleChange(event.target.value as ServiceRequestReasonCode)}
+                        onChange={(event) =>
+                          field.handleChange(
+                            event.target.value as ServiceRequestReasonCode,
+                          )
+                        }
                         className="min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 focus:border-blue-600 focus:outline-hidden focus:ring-2 focus:ring-blue-600/20"
                       >
-                        {REASON_OPTIONS[form.getFieldValue("category")].map((option) => (
-                          <option key={option.code} value={option.code}>{option.label}</option>
-                        ))}
+                        {REASON_OPTIONS[form.getFieldValue("category")].map(
+                          (option) => (
+                            <option key={option.code} value={option.code}>
+                              {option.label}
+                            </option>
+                          ),
+                        )}
                       </select>
                       <p className="text-xs text-slate-500">
-                        {REASON_OPTIONS[form.getFieldValue("category")].find((option) => option.code === field.state.value)?.description}
+                        {
+                          REASON_OPTIONS[form.getFieldValue("category")].find(
+                            (option) => option.code === field.state.value,
+                          )?.description
+                        }
                       </p>
                     </div>
                   )}

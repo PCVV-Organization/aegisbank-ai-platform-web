@@ -1,7 +1,26 @@
-export type ServiceRequestCategory = "LOAN" | "INSTALLMENT" | "FEE" | "GENERAL";
+export type ServiceRequestCategory =
+  | "ACCOUNT"
+  | "CARD"
+  | "PAYMENT"
+  | "LOAN"
+  | "INSTALLMENT"
+  | "FEE"
+  | "GENERAL";
 
 export type ServiceRequestStatus = "OPEN" | "IN_REVIEW" | "RESOLVED";
 export type ServiceRequestReasonCode =
+  | "ACCOUNT_BALANCE_DISPUTE"
+  | "ACCOUNT_ACCESS"
+  | "ACCOUNT_DATA_UPDATE"
+  | "ACCOUNT_STATEMENT"
+  | "CARD_UNRECOGNIZED_TRANSACTION"
+  | "CARD_BLOCKED"
+  | "CARD_LOST_STOLEN"
+  | "CARD_PAYMENT_DECLINED"
+  | "PAYMENT_NOT_RECEIVED"
+  | "PAYMENT_DUPLICATE"
+  | "PAYMENT_FAILED"
+  | "PAYMENT_REFUND"
   | "LOAN_RESTRUCTURING"
   | "LOAN_BALANCE_DISPUTE"
   | "LOAN_INTEREST_RATE"
