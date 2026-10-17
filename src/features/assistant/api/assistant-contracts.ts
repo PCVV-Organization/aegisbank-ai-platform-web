@@ -41,6 +41,10 @@ export interface ApprovalRequest {
   tool_name: string;
   normalized_arguments: Record<string, unknown>;
   status: "PENDING" | "APPROVED" | "REJECTED" | "EXECUTED";
+  execution_result?: {
+    service_request_id?: string;
+    [key: string]: unknown;
+  } | null;
 }
 
 export interface AssistantRunInput {
