@@ -34,6 +34,16 @@ const REASON_OPTIONS: Record<
       label: "Saldo o detalle del préstamo",
       description: "Diferencia en saldo o detalle.",
     },
+    {
+      code: "LOAN_INTEREST_RATE",
+      label: "Tasa de interés del préstamo",
+      description: "Consultar o reclamar la tasa aplicada.",
+    },
+    {
+      code: "LOAN_PAYMENT_DIFFICULTY",
+      label: "Dificultad para pagar",
+      description: "Orientación por dificultad temporal de pago.",
+    },
   ],
   INSTALLMENT: [
     {
@@ -51,6 +61,16 @@ const REASON_OPTIONS: Record<
       label: "Importe de cuota incorrecto",
       description: "El importe no coincide.",
     },
+    {
+      code: "INSTALLMENT_PAYMENT_NOT_REFLECTED",
+      label: "Pago no reflejado",
+      description: "El pago aún no aparece aplicado.",
+    },
+    {
+      code: "INSTALLMENT_OVERDUE_DISPUTE",
+      label: "Mora o vencimiento incorrecto",
+      description: "La cuota fue marcada como vencida incorrectamente.",
+    },
   ],
   FEE: [
     {
@@ -63,8 +83,38 @@ const REASON_OPTIONS: Record<
       label: "Comisión o cargo duplicado",
       description: "Reportar un cargo repetido.",
     },
+    {
+      code: "FEE_AMOUNT_DISPUTE",
+      label: "Importe de comisión incorrecto",
+      description: "El importe de la comisión no coincide.",
+    },
+    {
+      code: "FEE_REFUND_REQUEST",
+      label: "Solicitud de devolución",
+      description: "Solicitar revisión para posible devolución.",
+    },
   ],
   GENERAL: [
+    {
+      code: "GENERAL_FRAUD",
+      label: "Fraude o estafa",
+      description: "Reportar actividad fraudulenta.",
+    },
+    {
+      code: "GENERAL_ACCOUNT_ACCESS",
+      label: "Acceso o seguridad de cuenta",
+      description: "Reportar un problema de acceso o seguridad.",
+    },
+    {
+      code: "GENERAL_DATA_UPDATE",
+      label: "Actualización de datos",
+      description: "Orientación para actualizar datos.",
+    },
+    {
+      code: "GENERAL_STATUS",
+      label: "Estado de una solicitud",
+      description: "Consultar un reclamo o solicitud existente.",
+    },
     {
       code: "GENERAL_OTHER",
       label: "Otro motivo",
