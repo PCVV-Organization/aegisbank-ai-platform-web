@@ -475,13 +475,23 @@ export function AssistantPage() {
                         </div>
                       ))}
 
-                    {item.role === "assistant" && item.guidedRequest?.options?.length ? (
-                      <div className="mt-3 space-y-2 border-t border-slate-200/70 pt-3" aria-label="Opciones para tu solicitud">
-                        <p className="text-xs font-semibold text-slate-600">Selecciona una opción</p>
+                    {item.role === "assistant" &&
+                    item.guidedRequest?.options?.length ? (
+                      <div
+                        className="mt-3 space-y-2 border-t border-slate-200/70 pt-3"
+                        aria-label="Opciones para tu solicitud"
+                      >
+                        <p className="text-xs font-semibold text-slate-600">
+                          Selecciona una opción
+                        </p>
                         <div className="flex flex-wrap gap-2">
                           {item.guidedRequest.options.map((option) => (
                             <button
-                              key={option.reason_code ?? option.category ?? option.label}
+                              key={
+                                option.reason_code ??
+                                option.category ??
+                                option.label
+                              }
                               type="button"
                               className="rounded-lg border border-blue-200 bg-white px-3 py-2 text-left text-xs font-semibold text-blue-900 transition-colors hover:bg-blue-50 focus-visible:ring-2 focus-visible:ring-blue-600"
                               onClick={() => {
