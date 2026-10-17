@@ -23,6 +23,72 @@ const REASON_OPTIONS: Record<
   ServiceRequestCategory,
   { code: ServiceRequestReasonCode; label: string; description: string }[]
 > = {
+  ACCOUNT: [
+    {
+      code: "ACCOUNT_BALANCE_DISPUTE",
+      label: "Saldo de cuenta incorrecto",
+      description: "Diferencia en el saldo de una cuenta.",
+    },
+    {
+      code: "ACCOUNT_ACCESS",
+      label: "Acceso a la cuenta",
+      description: "Problema para acceder a la cuenta.",
+    },
+    {
+      code: "ACCOUNT_DATA_UPDATE",
+      label: "Actualización de datos de cuenta",
+      description: "Orientación para actualizar datos.",
+    },
+    {
+      code: "ACCOUNT_STATEMENT",
+      label: "Estado de cuenta",
+      description: "Orientación sobre un estado de cuenta.",
+    },
+  ],
+  CARD: [
+    {
+      code: "CARD_UNRECOGNIZED_TRANSACTION",
+      label: "Consumo no reconocido",
+      description: "Transacción con tarjeta que no reconoces.",
+    },
+    {
+      code: "CARD_BLOCKED",
+      label: "Tarjeta bloqueada",
+      description: "Revisión de una tarjeta bloqueada.",
+    },
+    {
+      code: "CARD_LOST_STOLEN",
+      label: "Tarjeta perdida o robada",
+      description: "Reportar pérdida o robo.",
+    },
+    {
+      code: "CARD_PAYMENT_DECLINED",
+      label: "Pago con tarjeta rechazado",
+      description: "Pago con tarjeta rechazado.",
+    },
+  ],
+  PAYMENT: [
+    {
+      code: "PAYMENT_NOT_RECEIVED",
+      label: "Pago no recibido",
+      description: "El beneficiario no recibió el pago.",
+    },
+    {
+      code: "PAYMENT_DUPLICATE",
+      label: "Pago duplicado",
+      description: "Pago registrado más de una vez.",
+    },
+    {
+      code: "PAYMENT_FAILED",
+      label: "Pago fallido",
+      description: "Pago que no pudo completarse.",
+    },
+    {
+      code: "PAYMENT_REFUND",
+      label: "Devolución de pago",
+      description: "Revisión de una devolución.",
+    },
+  ],
   LOAN: [
     {
       code: "LOAN_RESTRUCTURING",
@@ -130,6 +196,27 @@ const CATEGORY_OPTIONS: {
   badgeClass: string;
 }[] = [
   {
+    value: "ACCOUNT",
+    label: "Cuentas y saldos",
+    shortLabel: "Cuentas",
+    badgeClass:
+      "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100",
+  },
+  {
+    value: "CARD",
+    label: "Tarjetas",
+    shortLabel: "Tarjetas",
+    badgeClass:
+      "bg-violet-50 text-violet-700 border-violet-200 hover:bg-violet-100",
+  },
+  {
+    value: "PAYMENT",
+    label: "Pagos y transferencias",
+    shortLabel: "Pagos",
+    badgeClass:
+      "bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100",
+  },
+  {
     value: "GENERAL",
     label: "Consulta general institucional",
     shortLabel: "Consulta general",
@@ -157,7 +244,15 @@ const CATEGORY_OPTIONS: {
   },
 ];
 
-const categorySchema = z.enum(["LOAN", "INSTALLMENT", "FEE", "GENERAL"]);
+const categorySchema = z.enum([
+  "ACCOUNT",
+  "CARD",
+  "PAYMENT",
+  "LOAN",
+  "INSTALLMENT",
+  "FEE",
+  "GENERAL",
+]);
 
 const summarySchema = z
   .string()
