@@ -24,7 +24,7 @@ export interface GuidedRequestOption {
 }
 
 export interface GuidedRequest {
-  step: "CATEGORY" | "REASON" | "DESCRIPTION" | "CONFIRMATION";
+  step: "CATEGORY" | "REASON" | "DESCRIPTION" | "CONFIRMATION" | "CONTACT_SUPPORT";
   category?: string;
   reason_code?: string;
   reason_label?: string;

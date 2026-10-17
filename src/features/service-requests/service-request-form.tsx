@@ -23,17 +23,29 @@ const REASON_OPTIONS: Record<ServiceRequestCategory, { code: ServiceRequestReaso
   LOAN: [
     { code: "LOAN_RESTRUCTURING", label: "Reprogramación del préstamo", description: "Revisión o reprogramación de cuotas." },
     { code: "LOAN_BALANCE_DISPUTE", label: "Saldo o detalle del préstamo", description: "Diferencia en saldo o detalle." },
+    { code: "LOAN_INTEREST_RATE", label: "Tasa de interés del préstamo", description: "Consultar o reclamar la tasa aplicada." },
+    { code: "LOAN_PAYMENT_DIFFICULTY", label: "Dificultad para pagar", description: "Orientación por dificultad temporal de pago." },
   ],
   INSTALLMENT: [
     { code: "INSTALLMENT_DATE", label: "Fecha de vencimiento", description: "Consulta o reclamo sobre la fecha." },
     { code: "INSTALLMENT_DUPLICATE_CHARGE", label: "Cobro duplicado de cuota", description: "Reportar un cobro repetido." },
     { code: "INSTALLMENT_AMOUNT_DISPUTE", label: "Importe de cuota incorrecto", description: "El importe no coincide." },
+    { code: "INSTALLMENT_PAYMENT_NOT_REFLECTED", label: "Pago no reflejado", description: "El pago aún no aparece aplicado." },
+    { code: "INSTALLMENT_OVERDUE_DISPUTE", label: "Mora o vencimiento incorrecto", description: "La cuota fue marcada como vencida incorrectamente." },
   ],
   FEE: [
     { code: "FEE_UNRECOGNIZED", label: "Comisión o cargo no reconocido", description: "No reconoces el cargo." },
     { code: "FEE_DUPLICATE_CHARGE", label: "Comisión o cargo duplicado", description: "Reportar un cargo repetido." },
+    { code: "FEE_AMOUNT_DISPUTE", label: "Importe de comisión incorrecto", description: "El importe de la comisión no coincide." },
+    { code: "FEE_REFUND_REQUEST", label: "Solicitud de devolución", description: "Solicitar revisión para posible devolución." },
   ],
-  GENERAL: [{ code: "GENERAL_OTHER", label: "Otro motivo", description: "Describe el motivo." }],
+  GENERAL: [
+    { code: "GENERAL_FRAUD", label: "Fraude o estafa", description: "Reportar actividad fraudulenta." },
+    { code: "GENERAL_ACCOUNT_ACCESS", label: "Acceso o seguridad de cuenta", description: "Reportar un problema de acceso o seguridad." },
+    { code: "GENERAL_DATA_UPDATE", label: "Actualización de datos", description: "Orientación para actualizar datos." },
+    { code: "GENERAL_STATUS", label: "Estado de una solicitud", description: "Consultar un reclamo o solicitud existente." },
+    { code: "GENERAL_OTHER", label: "Otro motivo", description: "Describe el motivo." },
+  ],
 };
 
 const CATEGORY_OPTIONS: {
